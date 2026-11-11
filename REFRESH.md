@@ -13,6 +13,19 @@ Open `https://play.google.com/console/u/0/developers/7605572335669653268/app-lis
 Each app card shows: عمليات اكتساب الأجهزة = device acquisitions (last 28 days) with % change, عدد الأجهزة النشطة شهريًا = monthly active devices with % change. "13.5 ألف" = 13,500. arrow_left_alt before a % = decrease (negative), arrow_right_alt = increase.
 Apps: Mud Engineer Pro, Kingdom Rise, Captain Whiskers, Benny's Farm, MyMindCoach, Ostazzi.
 
+**Daily Android installs:** open `https://play.google.com/console/u/0/developers/7605572335669653268/app/4972053565840119838/statistics`, wait ~12 s, then javascript_tool (the auth headers ride in the query string of the page's own `statspage:startupData` request; never print them):
+```js
+const su=performance.getEntriesByType('resource').map(e=>e.name).find(n=>n.includes('statspage:startupData'));
+const q=su.slice(su.indexOf('?'));
+const ts=(app,from,to)=>new Promise(res=>{const r=new XMLHttpRequest();r.open('POST','https://playconsolestatsfrontend-pa.clients6.google.com/v1/developers/7605572335669653268/apps/'+app+'/statspage/time_series'+q);r.withCredentials=true;r.onload=()=>res(r.responseText);r.send(JSON.stringify({"1":{"1":{"1":"7605572335669653268"},"2":{"1":app}},"2":{"1":from,"2":to},"4":[{"1":{"1":4,"2":1,"3":1,"4":1},"2":2}],"5":1,"7":{"1":[{"1":1}]}}))});
+// from/to = {"1":YYYY,"2":M,"3":D}; answer JSON: ['1'][0]['4']['1'] = points, each {'2':{'2':"<count>"}, '4':{date}} (no '2' = 0)
+```
+Play app ids: Benny's Farm 4972053565840119838, Kingdom Rise 4975955969244754659, MyMindCoach 4973872268469513434, Ostazzi 4974692441579335100, Captain Whiskers 4973379803554666074, Mud Engineer Pro 4973249566921524184. Pull the last 60 days (today-60 .. today-1; Play's last 2 days are usually missing).
+
+### Ratings — Bash, public pages, no sign-in
+- Play: `curl -s -A "Mozilla/5.0" "https://play.google.com/store/apps/details?id=<package>&hl=en&gl=us" | grep -oE 'Rated [0-9.]+ stars out of five stars'` and the download badge (`[0-9.,]+[KM]?\+` before "Downloads"). Packages: com.blossom.merge, com.kingdomrise.game, com.mymindcoach.app, com.ostazai.app (Captain Whiskers and Mud Engineer Pro are in closed test, no public page).
+- App Store: `curl -s "https://itunes.apple.com/lookup?id=<id>"` → averageUserRating, userRatingCount.
+
 ### App Store — Claude in Chrome (`mcp__claude-in-chrome__*`)
 Open any page on appstoreconnect.apple.com (e.g. /apps/6787178673/analytics), wait, then javascript_tool:
 ```js
@@ -43,10 +56,12 @@ App names come back like "Bennys Farm Village Life (Android)" / "Kingdom Rise Em
 
 ## 2. Write the CSVs (same columns as today's files in data/ — read them first)
 - apps.csv: app,store,status,installs_28d,installs_change_pct,monthly_active,monthly_active_change_pct,installs_lifetime,store_revenue_usd_28d (Play rows: installs/MAU from the app list; App Store rows: installs_28d = sum of last 28 days of units, installs_lifetime = 2026 total, store_revenue = sum of last 28 days proceeds). Status: Live / Closed test as shown in Play; App Store apps are Live.
+- android_daily.csv: date,app,installs — one row per app per day for all 6 Play apps (0 where Play gives no value).
+- ratings.csv: app,store,rating,ratings_count,public_downloads — Play rows for the 4 public Play apps, App Store rows for all 4 iOS apps (empty rating when there are none).
 - ios_daily.csv: date,app,downloads,impressions,page_views — one row per app per day, only apps/days with any non-zero value or after the app's first non-zero day.
 - ads_daily.csv: date,app,platform,ad_revenue_usd,ad_users,ad_impressions — app "Benny's Farm"/"Kingdom Rise", platform Android/iOS, revenue rounded to 4 decimals.
 - paid_ads.csv: campaign,app,network,period,spend_usd,impressions,taps,installs,cost_per_install_usd,daily_budget_usd (period like "Last 7 days to 12 Nov").
-- youtube.csv: metric,value,window,note with metrics Subscribers, Subscriber change, Views, Watch time (hours), Estimated revenue (USD).
+- youtube.csv: metric,value,window,note with metrics Subscribers, Subscriber change, Views, Watch time (hours), Estimated revenue (USD). The Views note must read "Typical range <low>-<high>" (digits only, e.g. "Typical range 3600-85300") — the dashboard's alerts read it.
 - youtube_videos.csv: title,published(YYYY-MM-DD),status(Public/Scheduled/…),views — shorten titles (drop emoji and "| Happy Kids TV").
 Quote any field containing a comma. Write to data/ (overwrite). Also write data/meta.json as {"updated": "<D Mon YYYY>"} (e.g. "12 Nov 2026") — the public page shows it.
 
@@ -59,7 +74,7 @@ For each changed CSV:
 3. `ArtifactData update` with if_version: `{source: {url: <new blob url>}, updated: {at: <now ISO>, by: "Claude (daily refresh)"}, edit: {via: "claude", at: <now ISO>}}`.
 4. Delete the OLD asset (`Artifact` action delete, url = dashboard, path = old 32-char id) only after the update succeeded.
 Also update the asof line? No — the page text says "Snapshot collected 11 Nov"; replace that date: `ArtifactData update` files/index.html `edit` first, then `str_replace` field `text` old "Snapshot collected <old date>" → new date (read the doc first to find the current date and version).
-Dataset ids: apps, ios_daily, ads_daily, paid_ads, youtube, youtube_videos.
+Dataset ids: apps, android_daily, ratings, ios_daily, ads_daily, paid_ads, youtube, youtube_videos.
 
 ## 4. Save to GitHub
 In `D:\Claude ai\northstar-dashboard` (repo github.com/Himageo2006/northstar-dashboard, branch main): `git add data && git commit -m "Daily data refresh <YYYY-MM-DD>"` then `git push`. Skip if nothing changed. Push only this repo. The repo is PUBLIC and serves the dashboard at https://himageo2006.github.io/northstar-dashboard/ — never commit tokens, keys or anything besides the data files.

@@ -37,7 +37,7 @@ body { margin: 0; background: var(--color-bg); color: var(--color-fg); font: 14p
 <script>
 // Stand-in for the claude.ai dashboard runtime: same dash.data / calc / draw calls, fed from CSV files.
 (function () {
-  const files = ['apps', 'ios_daily', 'ads_daily', 'paid_ads', 'youtube', 'youtube_videos'];
+  const files = ['apps', 'android_daily', 'ratings', 'ios_daily', 'ads_daily', 'paid_ads', 'youtube', 'youtube_videos'];
   const src = {}, calcs = [], draws = [], hooks = [];
   const state = (id) => src[id] || { status: 'loading', data: [] };
   window.dash = {
@@ -99,6 +99,15 @@ body { margin: 0; background: var(--color-bg); color: var(--color-fg); font: 14p
 .nd .brk .k { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nd .brk .v { font-variant-numeric: tabular-nums; font-weight: var(--cds-font-weight-medium); text-align: right; }
 .nd .brk .d { grid-column: 1 / -1; color: var(--color-fg-muted); font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nd .alerts { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--cds-gap-sm); }
+.nd .alerts li { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: 10px 12px 10px 14px; display: grid; gap: 2px; position: relative; overflow: hidden; min-width: 0; }
+.nd .alerts li::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--color-fg-muted); }
+.nd .alerts li.bad::before { background: var(--color-bad); } .nd .alerts li.warn::before { background: var(--color-warn); } .nd .alerts li.good::before { background: var(--color-ok); }
+.nd .alerts .h { font-weight: var(--cds-font-weight-medium); color: var(--color-fg); }
+.nd .alerts .t { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); line-height: 1.45; }
+.nd .alerts .tag { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+.nd .alerts li.bad .tag { color: var(--color-bad); } .nd .alerts li.warn .tag { color: var(--color-warn); } .nd .alerts li.good .tag { color: var(--color-ok); }
+.nd .stars { color: var(--color-warn); }
 .nd .good { color: var(--color-ok); } .nd .bad { color: var(--color-bad); } .nd .warn { color: var(--color-warn); }
 .nd .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--cds-gap-xl); }
 .nd .card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-sm); min-width: 0; }
@@ -138,6 +147,19 @@ body { margin: 0; background: var(--color-bg); color: var(--color-fg); font: 14p
     </div>
   </section>
 
+  <section id="attention">
+    <h2>Needs attention</h2>
+    <p class="sub">Picked out automatically from the numbers below: installs or players down 10% or more, paid installs costing over $5, ratings under 4 stars, YouTube below its usual range. Good news shows in green.</p>
+    <ul class="alerts" data-draw="alerts" data-source="alerts"></ul>
+  </section>
+
+  <section id="android-chart" class="card">
+    <h2>Android installs per day</h2>
+    <p class="sub">Device acquisitions from Google Play Console, 12 Sep to 8 Nov. Play reports with a two-day delay. Smaller apps (MyMindCoach, Ostazzi, Captain Whiskers, Mud Engineer Pro) get under 10 a day and are left out of the chart.</p>
+    <div class="legend" data-draw="android-legend"></div>
+    <div class="chart" data-draw="android-chart" data-source="android_daily"></div>
+  </section>
+
   <section id="apps">
     <h2>Every app, by store</h2>
     <p class="sub">Installs and monthly active devices for the last 28 days. Change compares with the 28 days before. Play Console shows only rounded figures above 10,000.</p>
@@ -148,6 +170,7 @@ body { margin: 0; background: var(--color-bg); color: var(--color-fg); font: 14p
           <th class="r" data-field="installs_28d">Installs, 28 d</th><th class="r" data-field="installs_change_pct">Change</th>
           <th class="r" data-field="monthly_active">Monthly active</th><th class="r" data-field="monthly_active_change_pct">Change</th>
           <th class="r" data-field="installs_lifetime">Installs, all time</th>
+          <th class="r" data-source="ratings" data-field="rating">Rating</th>
         </tr></thead>
         <tbody data-draw="apps-table"></tbody>
       </table>
@@ -171,13 +194,14 @@ body { margin: 0; background: var(--color-bg); color: var(--color-fg); font: 14p
 
   <section id="ads">
     <h2>In-app ads by app · last 28 days</h2>
-    <p class="sub">eCPM is revenue per 1,000 ad impressions. Ad users counts players a day who started the ad system, averaged over the period.</p>
+    <p class="sub">eCPM is revenue per 1,000 ads shown. Ad users counts players a day who started the ad system, averaged over the period. Ads per player shows how often players actually see an ad; below 0.5 means most players never see one.</p>
     <div class="tw">
       <table data-source="ad_by_app" data-row-key="app,platform">
         <thead><tr>
           <th data-field="app">App</th><th data-field="platform">Platform</th>
           <th class="r" data-field="revenue">Revenue</th><th class="r" data-field="impressions">Impressions</th>
           <th class="r" data-field="ecpm">eCPM</th><th class="r" data-field="avg_users">Ad users a day</th>
+          <th class="r" data-field="ads_per_user">Ads per player a day</th><th class="r" data-field="rev_per_1k_users">Revenue per 1,000 players a day</th>
         </tr></thead>
         <tbody data-draw="ads-table"></tbody>
       </table>
@@ -298,11 +322,56 @@ dash.calc('ad_by_app', {
     const g = d3.rollups(cur, (v) => {
       const revenue = d3.sum(v, (r) => +r.ad_revenue_usd);
       const impressions = d3.sum(v, (r) => +r.ad_impressions);
-      return { revenue, impressions, ecpm: impressions ? (revenue / impressions) * 1000 : null, avg_users: Math.round(d3.sum(v, (r) => +r.ad_users) / 28) };
+      const userDays = d3.sum(v, (r) => +r.ad_users);
+      return {
+        revenue, impressions,
+        ecpm: impressions ? (revenue / impressions) * 1000 : null,
+        avg_users: Math.round(userDays / 28),
+        ads_per_user: userDays ? Math.round((impressions / userDays) * 100) / 100 : null,
+        rev_per_1k_users: userDays ? Math.round((revenue / userDays) * 1000 * 1000) / 1000 : null,
+      };
     }, (r) => r.app, (r) => r.platform);
     const rows = [];
     for (const [app, byP] of g) for (const [platform, m] of byP) rows.push({ app, platform, ...m });
     return rows.sort((a, b) => b.revenue - a.revenue);
+  },
+});
+
+dash.calc('alerts', {
+  title: 'Needs attention',
+  description: 'Rules applied to the other sources: Play installs or monthly players down 10% or more (up 10% or more is good news), Apple Ads cost per install over $5, ratings under 4 stars, YouTube views under the usual range or subscribers falling, games showing under 0.5 ads per player a day.',
+  inputs: ['apps', 'paid_ads', 'ratings', 'youtube', 'ads_daily'],
+  fn: (apps, paid_ads, ratings, youtube, ads_daily) => {
+    const out = [];
+    const add = (level, title, detail, value) => out.push({ level, title, detail, value });
+    for (const r of apps.filter((x) => x.store === 'Google Play' && x.status === 'Live')) {
+      const ic = r.installs_change_pct === null ? null : +r.installs_change_pct;
+      const mc = r.monthly_active_change_pct === null ? null : +r.monthly_active_change_pct;
+      if (+r.installs_28d < 100) continue;
+      if (ic !== null && ic <= -10) add('warn', r.app + ' Android installs down ' + Math.abs(ic) + '%', (+r.installs_28d).toLocaleString('en') + ' installs in the last 28 days compared with the 28 days before.', ic);
+      if (ic !== null && ic >= 10) add('good', r.app + ' Android installs up ' + ic + '%', (+r.installs_28d).toLocaleString('en') + ' installs in the last 28 days.', ic);
+      if (mc !== null && mc <= -10) add('warn', r.app + ' players down ' + Math.abs(mc) + '%', (+r.monthly_active).toLocaleString('en') + ' monthly active devices on Android.', mc);
+      if (mc !== null && mc >= 10) add('good', r.app + ' players up ' + mc + '%', (+r.monthly_active).toLocaleString('en') + ' monthly active devices on Android.', mc);
+    }
+    const best = d3.min(paid_ads, (r) => +r.cost_per_install_usd);
+    for (const r of paid_ads) {
+      const cpi = +r.cost_per_install_usd;
+      if (cpi > 5) add('bad', r.app + ' Apple Ads cost $' + cpi.toFixed(2) + ' per install', '$' + (+r.spend_usd).toFixed(2) + ' spent for ' + r.installs + ' installs (' + r.period + '). The best campaign pays $' + best.toFixed(2) + '. Consider lowering bids or pausing weak keywords.', cpi);
+      else if (cpi > 0 && cpi <= 2) add('good', r.app + ' Apple Ads at $' + cpi.toFixed(2) + ' per install', r.installs + ' installs from $' + (+r.spend_usd).toFixed(2) + ' (' + r.period + ').', cpi);
+    }
+    for (const r of ratings.filter((x) => x.rating !== null && x.store === 'Google Play' && +x.rating < 4)) add('warn', r.app + ' rated ' + (+r.rating).toFixed(1) + ' on Google Play', 'Below 4 stars lowers store ranking. Reply to low reviews and ask happy players to rate.', +r.rating);
+    const yv = youtube.find((x) => x.metric === 'Views');
+    if (yv && yv.note && /Typical range (\d+)/.test(yv.note) && +yv.value < +yv.note.match(/Typical range (\d+)/)[1]) add('warn', 'YouTube views below the usual range', (+yv.value).toLocaleString('en') + ' views in 28 days; the channel normally gets at least ' + (+yv.note.match(/Typical range (\d+)/)[1]).toLocaleString('en') + '.', +yv.value);
+    const ys = youtube.find((x) => x.metric === 'Subscriber change');
+    if (ys && +ys.value < 0) add('warn', 'YouTube lost ' + Math.abs(+ys.value).toLocaleString('en') + ' subscribers', 'Net change over the last 28 days. Regular uploads usually slow the loss.', +ys.value);
+    const end = d3.max(ads_daily, (r) => r.date);
+    if (end) {
+      const from = new Date(new Date(end + 'T00:00:00Z') - 27 * 864e5).toISOString().slice(0, 10);
+      const g = d3.rollups(ads_daily.filter((r) => r.date >= from && r.platform === 'Android'), (v) => d3.sum(v, (r) => +r.ad_impressions) / (d3.sum(v, (r) => +r.ad_users) || 1), (r) => r.app);
+      for (const [app, apu] of g) if (apu < 0.5) add('warn', app + ' shows few ads', 'Only ' + apu.toFixed(2) + ' ads per Android player a day over the last 28 days, so most players never see an ad.', Math.round(apu * 100) / 100);
+    }
+    const order = { bad: 0, warn: 1, good: 2 };
+    return out.sort((a, b) => order[a.level] - order[b.level]);
   },
 });
 
@@ -446,6 +515,8 @@ const chg = (tr, v) => {
 
 dash.draw('apps-table', (tb) => {
   const d = dash.data('apps');
+  const rd = dash.data('ratings');
+  const ratings = rd.status === 'ok' ? rd.data : [];
   tb.replaceChildren();
   if (d.status !== 'ok') return;
   for (const r of d.data) {
@@ -460,6 +531,14 @@ dash.draw('apps-table', (tb) => {
     cell(tr, r.monthly_active === null ? '' : fmtInt(+r.monthly_active), 'r');
     chg(tr, num(r.monthly_active_change_pct));
     cell(tr, r.installs_lifetime === null ? '' : fmtInt(+r.installs_lifetime), 'r');
+    const rt = ratings.find((x) => x.app === r.app && x.store === r.store);
+    const rc = cell(tr, '', 'r');
+    if (rt && rt.rating !== null) {
+      const s = document.createElement('span'); s.className = 'stars'; s.textContent = '★ ';
+      rc.append(s, (+rt.rating).toFixed(1));
+      if (+rt.rating < 4) rc.classList.add('warn');
+    } else rc.textContent = 'No ratings';
+    if (!rt || rt.rating === null) rc.classList.add('store');
     tb.appendChild(tr);
   }
 });
@@ -474,6 +553,9 @@ dash.draw('ads-table', (tb) => {
     cell(tr, r.app); cell(tr, r.platform, 'store');
     cell(tr, fmtMoney(r.revenue), 'r'); cell(tr, fmtInt(r.impressions), 'r');
     cell(tr, r.ecpm === null ? '' : fmtMoney(r.ecpm), 'r'); cell(tr, fmtInt(r.avg_users), 'r');
+    const apu = cell(tr, r.ads_per_user === null ? '' : d3.format('.2f')(r.ads_per_user), 'r');
+    if (r.ads_per_user !== null && r.ads_per_user < 0.5) apu.classList.add('warn');
+    cell(tr, r.rev_per_1k_users === null ? '' : fmtMoney(r.rev_per_1k_users), 'r');
     tb.appendChild(tr);
   }
 });
@@ -517,15 +599,17 @@ dash.draw('ad-legend', (el) => legend(el, ["Benny's Farm", 'Kingdom Rise']));
 
 const failed = (el, d) => { el.replaceChildren(); if (d.status === 'error') { const p = document.createElement('p'); p.className = 'sub'; p.textContent = 'Failed to load'; el.appendChild(p); } };
 
-dash.draw('ios-chart', (el) => {
-  const d = dash.data('ios_daily');
+// One line per app over days; shared by the Android and iPhone charts.
+const lineChart = (el, id, field, apps, aria) => {
+  const d = dash.data(id);
   if (d.status !== 'ok') { failed(el, d); return; }
   el.replaceChildren();
-  const W = el.clientWidth || 600, H = 240, m = { t: 10, r: 12, b: 24, l: 30 };
-  const rows = d.data.map((r) => ({ date: new Date(r.date + 'T00:00:00Z'), app: r.app, v: +r.downloads }));
+  const W = el.clientWidth || 600, H = 240, m = { t: 10, r: 12, b: 24, l: 34 };
+  const rows = d.data.filter((r) => apps.includes(r.app)).map((r) => ({ date: new Date(r.date + 'T00:00:00Z'), app: r.app, v: +r[field] }));
+  if (!rows.length) return;
   const x = d3.scaleUtc(d3.extent(rows, (r) => r.date), [m.l, W - m.r]);
   const y = d3.scaleLinear([0, Math.max(5, d3.max(rows, (r) => r.v))], [H - m.b, m.t]).nice();
-  const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Daily first-time iPhone downloads per app from 12 September to 9 November');
+  const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', aria);
   svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).ticks(Math.max(2, Math.floor(W / 110))).tickFormat(d3.utcFormat('%-d %b')).tickSizeOuter(0)).call((g) => g.select('.domain').style('stroke', 'var(--cds-chart-axis)')).call((g) => g.selectAll('line').style('stroke', 'var(--cds-chart-axis)'));
   svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(4).tickSize(-(W - m.l - m.r))).call((g) => g.select('.domain').remove()).call((g) => g.selectAll('line').style('stroke', 'var(--cds-chart-grid)'));
   const groups = d3.group(rows, (r) => r.app);
@@ -541,12 +625,31 @@ dash.draw('ios-chart', (el) => {
       const at = rows.filter((r) => +r.date === +day);
       guide.attr('x1', x(day)).attr('x2', x(day)).attr('visibility', 'visible');
       tip.replaceChildren(); const h = document.createElement('div'); h.textContent = d3.utcFormat('%-d %b %Y')(day); tip.appendChild(h);
-      for (const r of at) { const l = document.createElement('div'); l.textContent = r.app + ': ' + r.v; tip.appendChild(l); }
+      for (const r of at) { const l = document.createElement('div'); l.textContent = r.app + ': ' + fmtInt(r.v); tip.appendChild(l); }
       tip.hidden = false;
       const left = Math.min(Math.max(0, x(day) / W * el.clientWidth + 10), el.clientWidth - 160);
       tip.style.left = left + 'px'; tip.style.top = '10px';
     })
     .on('pointerleave', () => { tip.hidden = true; guide.attr('visibility', 'hidden'); });
+};
+dash.draw('ios-chart', (el) => lineChart(el, 'ios_daily', 'downloads', ["Benny's Farm", 'Kingdom Rise', 'Captain Whiskers'], 'Daily first-time iPhone downloads per app'));
+dash.draw('android-chart', (el) => lineChart(el, 'android_daily', 'installs', ["Benny's Farm", 'Kingdom Rise'], 'Daily Android installs for Benny\'s Farm and Kingdom Rise'));
+dash.draw('android-legend', (el) => legend(el, ["Benny's Farm", 'Kingdom Rise']));
+
+dash.draw('alerts', (ul) => {
+  ul.replaceChildren();
+  const d = dash.data('alerts');
+  if (d.status !== 'ok' || !Array.isArray(d.data)) return;
+  const label = { bad: 'Act now', warn: 'Watch', good: 'Going well' };
+  d.data.forEach((a, i) => {
+    const li = document.createElement('li'); li.className = a.level;
+    const tag = document.createElement('span'); tag.className = 'tag'; tag.textContent = label[a.level];
+    const h = document.createElement('span'); h.className = 'h'; h.textContent = a.title;
+    h.setAttribute('data-source', 'alerts'); h.setAttribute('data-field', 'title'); h.setAttribute('data-row', String(i));
+    const t = document.createElement('span'); t.className = 't'; t.textContent = a.detail;
+    li.append(tag, h, t); ul.appendChild(li);
+  });
+  if (!d.data.length) { const li = document.createElement('li'); li.className = 'good'; li.textContent = 'Nothing needs attention right now.'; ul.appendChild(li); }
 });
 
 dash.draw('ad-chart', (el) => {
