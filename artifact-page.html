@@ -1,0 +1,402 @@
+<meta name="dash-one-writer">
+<style>
+.nd { display: grid; gap: var(--cds-gap-xl); font-family: var(--font-anthropic-sans); color: var(--color-fg); }
+.nd h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; text-wrap: balance; }
+.nd h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; text-wrap: balance; }
+.nd .lede { margin: var(--cds-gap-sm) 0 0; color: var(--color-fg-muted); max-width: 70ch; line-height: 1.5; }
+.nd .lede b { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); font-variant-numeric: tabular-nums; }
+.nd .asof { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-top: var(--cds-gap-xs); }
+.nd section { display: grid; gap: var(--cds-gap-md); min-width: 0; }
+.nd .sub { margin: 0; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.nd .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--cds-gap-md); }
+.nd .tile { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-xs); align-content: start; min-width: 0; }
+.nd .tile .lab { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); text-transform: uppercase; letter-spacing: .04em; }
+.nd .tile .num { font-family: var(--font-anthropic-serif); font-size: 2rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.nd .tile .note { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.nd .good { color: var(--color-ok); } .nd .bad { color: var(--color-bad); } .nd .warn { color: var(--color-warn); }
+.nd .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--cds-gap-xl); }
+.nd .card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-sm); min-width: 0; }
+.nd .chart { position: relative; min-height: 240px; }
+.nd .chart svg text { fill: var(--cds-text-secondary); font-size: 11px; }
+.nd .legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.nd .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.nd .tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); box-shadow: var(--cds-shadow-popover); border-radius: var(--cds-radius); padding: 6px 8px; font-size: var(--cds-font-size-caption); white-space: nowrap; z-index: 2; }
+.nd .tw { overflow-x: auto; }
+.nd table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-body); font-variant-numeric: tabular-nums; }
+.nd th { text-align: left; font-weight: var(--cds-font-weight-medium); color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); padding: 6px 10px; border-bottom: 1px solid var(--color-border-line); white-space: nowrap; }
+.nd td { padding: 8px 10px; border-bottom: 1px solid var(--color-border-line); white-space: nowrap; }
+.nd th.r, .nd td.r { text-align: right; }
+.nd .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: var(--cds-font-size-caption); border: 1px solid var(--color-border-line); }
+.nd .pill.live { color: var(--color-ok); border-color: currentColor; }
+.nd .pill.test { color: var(--color-warn); border-color: currentColor; }
+.nd .store { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.nd details { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); line-height: 1.6; }
+.nd details summary { cursor: pointer; color: var(--color-fg); font-size: var(--cds-font-size-body); }
+[data-dash-source-state=refreshing] { opacity: .5; }
+</style>
+
+<div class="nd">
+  <header id="top">
+    <h1>Northstar Apps Dashboard</h1>
+    <p class="lede" data-read lang="en">In the last 28 days your apps got <b data-draw="t-installs" data-source="totals" data-field="installs_28d">—</b> new installs, <b data-draw="t-share" data-source="totals" data-field="android_share">—</b> of them from Google Play. In-app ads earned <b data-draw="t-adrev" data-source="totals" data-field="ad_revenue_28d">—</b>, and Apple Ads spent <b data-draw="t-spend" data-source="paid_totals" data-field="spend">—</b> in the last 7 days to win <b data-draw="t-paidinst" data-source="paid_totals" data-field="installs">—</b> iPhone installs.</p>
+    <div class="asof">Snapshot collected 11 Nov 2026 from Play Console, App Store Connect, LevelPlay, Apple Ads and YouTube Studio.</div>
+  </header>
+
+  <section id="kpis" aria-label="Headline numbers">
+    <div class="tiles">
+      <div class="tile"><span class="lab">New installs · 28 days</span><span class="num" data-draw="k-installs" data-source="totals" data-field="installs_28d">—</span><span class="note">All apps, both stores</span></div>
+      <div class="tile"><span class="lab">Monthly active · Android</span><span class="num" data-draw="k-mau" data-source="totals" data-field="play_mau">—</span><span class="note">Devices, last 28 days</span></div>
+      <div class="tile"><span class="lab">Ad revenue · 28 days</span><span class="num" data-draw="k-adrev" data-source="totals" data-field="ad_revenue_28d">—</span><span class="note" data-draw="k-adrev-chg">—</span></div>
+      <div class="tile"><span class="lab">Store sales · 28 days</span><span class="num" data-draw="k-store" data-source="totals" data-field="store_revenue_28d">—</span><span class="note">In-app purchases, after store fees</span></div>
+      <div class="tile"><span class="lab">YouTube subscribers</span><span class="num" data-draw="k-subs" data-source="youtube" data-where="metric=Subscribers" data-field="value">—</span><span class="note" data-draw="k-subs-chg">—</span></div>
+    </div>
+  </section>
+
+  <section id="apps">
+    <h2>Every app, by store</h2>
+    <p class="sub">Installs and monthly active devices for the last 28 days. Change compares with the 28 days before. Play Console shows only rounded figures above 10,000.</p>
+    <div class="tw">
+      <table data-source="apps" data-row-key="app,store">
+        <thead><tr>
+          <th data-field="app">App</th><th data-field="store">Store</th><th data-field="status">Status</th>
+          <th class="r" data-field="installs_28d">Installs, 28 d</th><th class="r" data-field="installs_change_pct">Change</th>
+          <th class="r" data-field="monthly_active">Monthly active</th><th class="r" data-field="monthly_active_change_pct">Change</th>
+          <th class="r" data-field="installs_lifetime">Installs, all time</th>
+        </tr></thead>
+        <tbody data-draw="apps-table"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="two">
+    <section id="ios-chart" class="card">
+      <h2>iPhone downloads per day</h2>
+      <p class="sub">First-time downloads from the App Store, 12 Sep to 9 Nov. Benny's Farm launched on iOS on 21 Oct, Captain Whiskers on 6 Nov.</p>
+      <div class="legend" data-draw="ios-legend"></div>
+      <div class="chart" data-draw="ios-chart" data-source="ios_daily"></div>
+    </section>
+    <section id="ad-chart" class="card">
+      <h2>Ad revenue per week</h2>
+      <p class="sub">LevelPlay ad revenue in US dollars, Android and iOS combined. Weeks start on Monday.</p>
+      <div class="legend" data-draw="ad-legend"></div>
+      <div class="chart" data-draw="ad-chart" data-source="ad_weekly"></div>
+    </section>
+  </div>
+
+  <section id="ads">
+    <h2>In-app ads by app · last 28 days</h2>
+    <p class="sub">eCPM is revenue per 1,000 ad impressions. Ad users counts players a day who started the ad system, averaged over the period.</p>
+    <div class="tw">
+      <table data-source="ad_by_app" data-row-key="app,platform">
+        <thead><tr>
+          <th data-field="app">App</th><th data-field="platform">Platform</th>
+          <th class="r" data-field="revenue">Revenue</th><th class="r" data-field="impressions">Impressions</th>
+          <th class="r" data-field="ecpm">eCPM</th><th class="r" data-field="avg_users">Ad users a day</th>
+        </tr></thead>
+        <tbody data-draw="ads-table"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="paid">
+    <h2>Paid campaigns · Apple Ads, last 7 days</h2>
+    <p class="sub">Each campaign has a $10 daily budget. Cost per install is spend divided by installs.</p>
+    <div class="tw">
+      <table data-source="paid_ads" data-row-key="campaign">
+        <thead><tr>
+          <th data-field="campaign">Campaign</th><th class="r" data-field="spend_usd">Spend</th><th class="r" data-field="impressions">Impressions</th>
+          <th class="r" data-field="taps">Taps</th><th class="r" data-field="installs">Installs</th><th class="r" data-field="cost_per_install_usd">Cost per install</th>
+        </tr></thead>
+        <tbody data-draw="paid-table"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="youtube">
+    <h2>Happy Kids TV on YouTube</h2>
+    <div class="tiles">
+      <div class="tile"><span class="lab">Views · 28 days</span><span class="num" data-draw="y-views" data-source="youtube" data-where="metric=Views" data-field="value">—</span><span class="note">Usual range 3,600 to 85,300</span></div>
+      <div class="tile"><span class="lab">Watch time · 28 days</span><span class="num" data-draw="y-watch" data-source="youtube" data-where="metric=Watch time (hours)" data-field="value">—</span><span class="note">Hours</span></div>
+      <div class="tile"><span class="lab">Estimated revenue · 28 days</span><span class="num" data-draw="y-rev" data-source="youtube" data-where="metric=Estimated revenue (USD)" data-field="value">—</span><span class="note">Made-for-kids videos carry few ads</span></div>
+    </div>
+    <p class="sub">New uploads since 10 Nov and their views so far.</p>
+    <div class="tw">
+      <table data-source="youtube_videos" data-row-key="title">
+        <thead><tr><th data-field="title">Video</th><th data-field="published">Published</th><th data-field="status">Status</th><th class="r" data-field="views">Views</th></tr></thead>
+        <tbody data-draw="yt-table"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <details id="notes">
+    <summary>Where these numbers come from</summary>
+    <p>Google Play: Play Console app list, last 28 days to 10 Nov (device acquisitions and monthly active devices). Play shows no store sales because none of the apps sold in-app items there.</p>
+    <p>App Store: App Store Connect Analytics, first-time downloads and proceeds per day. Mud Engineer Pro went live on iOS on 10 Nov, so it has no downloads yet.</p>
+    <p>In-app ads: LevelPlay performance report, revenue, impressions and ad users per app and day, 12 Sep to 10 Nov. Only Benny's Farm and Kingdom Rise show ads.</p>
+    <p>Apple Ads: campaign report, last 7 days to 11 Nov. YouTube: YouTube Studio channel analytics, 14 Oct to 10 Nov.</p>
+  </details>
+</div>
+
+<script>
+const num = (v) => (v === null || v === undefined || v === '' ? null : +v);
+const lastWindow = (rows, days) => {
+  const end = d3.max(rows, (r) => r.date);
+  if (!end) return { from: null, to: null, prevFrom: null };
+  const e = new Date(end + 'T00:00:00Z');
+  const iso = (d) => d.toISOString().slice(0, 10);
+  return { to: end, from: iso(new Date(e - (days - 1) * 864e5)), prevFrom: iso(new Date(e - (2 * days - 1) * 864e5)) };
+};
+window.ndLastWindow = lastWindow;
+
+dash.calc('totals', {
+  title: 'Headline totals',
+  description: 'Installs, Android monthly actives, store sales and ad revenue added up across apps for the last 28 days.',
+  inputs: ['apps', 'ads_daily'],
+  fn: (apps, ads) => {
+    const n = (v) => (v === null || v === '' || v === undefined ? 0 : +v);
+    const installs = d3.sum(apps, (r) => n(r.installs_28d));
+    const play = d3.sum(apps.filter((r) => r.store === 'Google Play'), (r) => n(r.installs_28d));
+    const end = d3.max(ads, (r) => r.date);
+    const e = end ? new Date(end + 'T00:00:00Z') : null;
+    const iso = (d) => d.toISOString().slice(0, 10);
+    const from = e ? iso(new Date(e - 27 * 864e5)) : '';
+    const prevFrom = e ? iso(new Date(e - 55 * 864e5)) : '';
+    const cur = ads.filter((r) => r.date >= from);
+    const prev = ads.filter((r) => r.date >= prevFrom && r.date < from);
+    return [{
+      installs_28d: installs,
+      android_share: installs ? play / installs : null,
+      play_mau: d3.sum(apps.filter((r) => r.store === 'Google Play'), (r) => n(r.monthly_active)),
+      store_revenue_28d: d3.sum(apps, (r) => n(r.store_revenue_usd_28d)),
+      ad_revenue_28d: d3.sum(cur, (r) => n(r.ad_revenue_usd)),
+      ad_revenue_prev_28d: d3.sum(prev, (r) => n(r.ad_revenue_usd)),
+      ad_revenue_change: d3.sum(prev, (r) => n(r.ad_revenue_usd)) ? d3.sum(cur, (r) => n(r.ad_revenue_usd)) / d3.sum(prev, (r) => n(r.ad_revenue_usd)) - 1 : null,
+    }];
+  },
+});
+
+dash.calc('ad_by_app', {
+  title: 'Ad revenue by app, last 28 days',
+  description: 'LevelPlay revenue, impressions, eCPM and average daily ad users per app and platform over the last 28 days of data.',
+  inputs: ['ads_daily'],
+  fn: (ads) => {
+    const end = d3.max(ads, (r) => r.date);
+    if (!end) return [];
+    const from = new Date(new Date(end + 'T00:00:00Z') - 27 * 864e5).toISOString().slice(0, 10);
+    const cur = ads.filter((r) => r.date >= from);
+    const g = d3.rollups(cur, (v) => {
+      const revenue = d3.sum(v, (r) => +r.ad_revenue_usd);
+      const impressions = d3.sum(v, (r) => +r.ad_impressions);
+      return { revenue, impressions, ecpm: impressions ? (revenue / impressions) * 1000 : null, avg_users: Math.round(d3.sum(v, (r) => +r.ad_users) / 28) };
+    }, (r) => r.app, (r) => r.platform);
+    const rows = [];
+    for (const [app, byP] of g) for (const [platform, m] of byP) rows.push({ app, platform, ...m });
+    return rows.sort((a, b) => b.revenue - a.revenue);
+  },
+});
+
+dash.calc('ad_weekly', {
+  title: 'Ad revenue per week',
+  description: 'LevelPlay revenue summed per app and Monday-starting week, both platforms together.',
+  inputs: ['ads_daily'],
+  fn: (ads) => {
+    const g = d3.rollups(ads, (v) => d3.sum(v, (r) => +r.ad_revenue_usd), (r) => d3.utcMonday.floor(new Date(r.date + 'T00:00:00Z')).toISOString().slice(0, 10), (r) => r.app);
+    const rows = [];
+    for (const [week, byApp] of g) for (const [app, revenue] of byApp) rows.push({ week, app, revenue: Math.round(revenue * 100) / 100 });
+    return rows.sort((a, b) => d3.ascending(a.week, b.week));
+  },
+});
+
+dash.calc('paid_totals', {
+  title: 'Apple Ads totals',
+  description: 'Spend and installs added up across Apple Ads campaigns for the last 7 days.',
+  inputs: ['paid_ads'],
+  fn: (paid_ads) => [{ spend: d3.sum(paid_ads, (r) => +r.spend_usd), installs: d3.sum(paid_ads, (r) => +r.installs) }],
+});
+</script>
+
+<script>
+const num = (v) => (v === null || v === undefined || v === '' ? null : +v);
+const fmtInt = d3.format(',');
+const fmtMoney = (v) => (v === null || isNaN(v) ? '—' : v < 10 ? d3.format('$.2f')(v) : d3.format('$,.0f')(v));
+const fmtPct = d3.format('.0%');
+const rowOf = (id) => { const d = dash.data(id); return d.status === 'ok' && d.data && d.data[0] ? d.data[0] : null; };
+const setText = (el, s) => { el.textContent = s; el.classList.remove('dash-skeleton'); };
+const appColors = { "Benny's Farm": dash.colors[0], 'Kingdom Rise': dash.colors[1], 'Captain Whiskers': dash.colors[2] };
+
+const one = (name, id, field, fmt) => dash.draw(name, (el) => { const r = rowOf(id); setText(el, r && r[field] !== null ? fmt(r[field]) : '—'); });
+one('t-installs', 'totals', 'installs_28d', fmtInt);
+one('t-share', 'totals', 'android_share', d3.format('.1~%'));
+one('t-adrev', 'totals', 'ad_revenue_28d', fmtMoney);
+one('t-spend', 'paid_totals', 'spend', fmtMoney);
+one('t-paidinst', 'paid_totals', 'installs', fmtInt);
+one('k-installs', 'totals', 'installs_28d', fmtInt);
+one('k-mau', 'totals', 'play_mau', fmtInt);
+one('k-adrev', 'totals', 'ad_revenue_28d', fmtMoney);
+one('k-store', 'totals', 'store_revenue_28d', fmtMoney);
+
+dash.draw('k-adrev-chg', (el) => {
+  const r = rowOf('totals');
+  if (!r || r.ad_revenue_change === null) { setText(el, '—'); el.className = 'note'; return; }
+  const c = r.ad_revenue_change;
+  setText(el, (c >= 0 ? '+' : '') + fmtPct(c) + ' vs previous 28 days (' + fmtMoney(r.ad_revenue_prev_28d) + ')');
+  el.className = 'note ' + (c >= 0 ? 'good' : 'bad');
+});
+
+const ytVal = (metric) => { const d = dash.data('youtube'); if (d.status !== 'ok') return null; const r = d.data.find((x) => x.metric === metric); return r ? +r.value : null; };
+const ytOne = (name, metric, fmt) => dash.draw(name, (el) => { const v = ytVal(metric); setText(el, v === null ? '—' : fmt(v)); });
+ytOne('k-subs', 'Subscribers', fmtInt);
+ytOne('y-views', 'Views', fmtInt);
+ytOne('y-watch', 'Watch time (hours)', d3.format(',.1f'));
+ytOne('y-rev', 'Estimated revenue (USD)', fmtMoney);
+dash.draw('k-subs-chg', (el) => {
+  const v = ytVal('Subscriber change');
+  if (v === null) { setText(el, '—'); return; }
+  setText(el, (v >= 0 ? '+' : '') + fmtInt(v) + ' in the last 28 days');
+  el.className = 'note ' + (v >= 0 ? 'good' : 'bad');
+});
+
+const cell = (tr, text, cls) => { const td = document.createElement('td'); td.textContent = text; if (cls) td.className = cls; tr.appendChild(td); return td; };
+const chg = (tr, v) => {
+  const td = cell(tr, v === null ? '' : (v > 0 ? '+' : '') + v + '%', 'r');
+  if (v !== null) td.classList.add(v >= 0 ? 'good' : 'bad');
+};
+
+dash.draw('apps-table', (tb) => {
+  const d = dash.data('apps');
+  tb.replaceChildren();
+  if (d.status !== 'ok') return;
+  for (const r of d.data) {
+    const tr = document.createElement('tr');
+    tr.dataset.key = encodeURIComponent(r.app) + ',' + encodeURIComponent(r.store);
+    cell(tr, r.app);
+    cell(tr, r.store, 'store');
+    const st = cell(tr, '');
+    const p = document.createElement('span'); p.className = 'pill ' + (r.status === 'Live' ? 'live' : 'test'); p.textContent = r.status; st.appendChild(p);
+    cell(tr, r.installs_28d === null ? '' : fmtInt(+r.installs_28d), 'r');
+    chg(tr, num(r.installs_change_pct));
+    cell(tr, r.monthly_active === null ? '' : fmtInt(+r.monthly_active), 'r');
+    chg(tr, num(r.monthly_active_change_pct));
+    cell(tr, r.installs_lifetime === null ? '' : fmtInt(+r.installs_lifetime), 'r');
+    tb.appendChild(tr);
+  }
+});
+
+dash.draw('ads-table', (tb) => {
+  const d = dash.data('ad_by_app');
+  tb.replaceChildren();
+  if (d.status !== 'ok' || !Array.isArray(d.data)) return;
+  for (const r of d.data) {
+    const tr = document.createElement('tr');
+    tr.dataset.key = encodeURIComponent(r.app) + ',' + encodeURIComponent(r.platform);
+    cell(tr, r.app); cell(tr, r.platform, 'store');
+    cell(tr, fmtMoney(r.revenue), 'r'); cell(tr, fmtInt(r.impressions), 'r');
+    cell(tr, r.ecpm === null ? '' : fmtMoney(r.ecpm), 'r'); cell(tr, fmtInt(r.avg_users), 'r');
+    tb.appendChild(tr);
+  }
+});
+
+dash.draw('paid-table', (tb) => {
+  const d = dash.data('paid_ads');
+  tb.replaceChildren();
+  if (d.status !== 'ok') return;
+  for (const r of d.data) {
+    const tr = document.createElement('tr');
+    tr.dataset.key = encodeURIComponent(r.campaign);
+    cell(tr, r.campaign);
+    cell(tr, fmtMoney(+r.spend_usd), 'r'); cell(tr, fmtInt(+r.impressions), 'r'); cell(tr, fmtInt(+r.taps), 'r'); cell(tr, fmtInt(+r.installs), 'r');
+    const c = cell(tr, fmtMoney(+r.cost_per_install_usd), 'r');
+    c.classList.add(+r.cost_per_install_usd <= 3 ? 'good' : 'bad');
+    tb.appendChild(tr);
+  }
+});
+
+dash.draw('yt-table', (tb) => {
+  const d = dash.data('youtube_videos');
+  tb.replaceChildren();
+  if (d.status !== 'ok') return;
+  for (const r of d.data) {
+    const tr = document.createElement('tr');
+    tr.dataset.key = encodeURIComponent(r.title);
+    cell(tr, r.title);
+    cell(tr, d3.utcFormat('%-d %b')(new Date(r.published + 'T00:00:00Z')), 'store');
+    const st = cell(tr, '');
+    const p = document.createElement('span'); p.className = 'pill ' + (r.status === 'Public' ? 'live' : 'test'); p.textContent = r.status; st.appendChild(p);
+    cell(tr, fmtInt(+r.views), 'r');
+    tb.appendChild(tr);
+  }
+});
+
+const legend = (el, names) => {
+  el.replaceChildren(...names.map((n) => { const s = document.createElement('span'); const i = document.createElement('i'); i.style.background = appColors[n]; s.append(i, n); return s; }));
+};
+dash.draw('ios-legend', (el) => legend(el, ["Benny's Farm", 'Kingdom Rise', 'Captain Whiskers']));
+dash.draw('ad-legend', (el) => legend(el, ["Benny's Farm", 'Kingdom Rise']));
+
+const failed = (el, d) => { el.replaceChildren(); if (d.status === 'error') { const p = document.createElement('p'); p.className = 'sub'; p.textContent = 'Failed to load'; el.appendChild(p); } };
+
+dash.draw('ios-chart', (el) => {
+  const d = dash.data('ios_daily');
+  if (d.status !== 'ok') { failed(el, d); return; }
+  el.replaceChildren();
+  const W = el.clientWidth || 600, H = 240, m = { t: 10, r: 12, b: 24, l: 30 };
+  const rows = d.data.map((r) => ({ date: new Date(r.date + 'T00:00:00Z'), app: r.app, v: +r.downloads }));
+  const x = d3.scaleUtc(d3.extent(rows, (r) => r.date), [m.l, W - m.r]);
+  const y = d3.scaleLinear([0, Math.max(5, d3.max(rows, (r) => r.v))], [H - m.b, m.t]).nice();
+  const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Daily first-time iPhone downloads per app from 12 September to 9 November');
+  svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).ticks(Math.max(2, Math.floor(W / 110))).tickFormat(d3.utcFormat('%-d %b')).tickSizeOuter(0)).call((g) => g.select('.domain').style('stroke', 'var(--cds-chart-axis)')).call((g) => g.selectAll('line').style('stroke', 'var(--cds-chart-axis)'));
+  svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(4).tickSize(-(W - m.l - m.r))).call((g) => g.select('.domain').remove()).call((g) => g.selectAll('line').style('stroke', 'var(--cds-chart-grid)'));
+  const groups = d3.group(rows, (r) => r.app);
+  for (const [app, v] of groups) {
+    svg.append('path').datum(v).attr('fill', 'none').style('stroke', appColors[app]).attr('stroke-width', 2).attr('d', d3.line().x((r) => x(r.date)).y((r) => y(r.v)));
+  }
+  const tip = document.createElement('div'); tip.className = 'tip'; tip.hidden = true; el.appendChild(tip);
+  const guide = svg.append('line').attr('y1', m.t).attr('y2', H - m.b).style('stroke', 'var(--cds-chart-reference)').attr('visibility', 'hidden');
+  svg.append('rect').attr('x', m.l).attr('y', m.t).attr('width', W - m.l - m.r).attr('height', H - m.t - m.b).attr('fill', 'transparent')
+    .on('pointermove', (ev) => {
+      const [px] = d3.pointer(ev);
+      const day = d3.utcDay.round(x.invert(px));
+      const at = rows.filter((r) => +r.date === +day);
+      guide.attr('x1', x(day)).attr('x2', x(day)).attr('visibility', 'visible');
+      tip.replaceChildren(); const h = document.createElement('div'); h.textContent = d3.utcFormat('%-d %b %Y')(day); tip.appendChild(h);
+      for (const r of at) { const l = document.createElement('div'); l.textContent = r.app + ': ' + r.v; tip.appendChild(l); }
+      tip.hidden = false;
+      const left = Math.min(Math.max(0, x(day) / W * el.clientWidth + 10), el.clientWidth - 160);
+      tip.style.left = left + 'px'; tip.style.top = '10px';
+    })
+    .on('pointerleave', () => { tip.hidden = true; guide.attr('visibility', 'hidden'); });
+});
+
+dash.draw('ad-chart', (el) => {
+  const d = dash.data('ad_weekly');
+  if (d.status !== 'ok' || !Array.isArray(d.data)) { failed(el, d); return; }
+  el.replaceChildren();
+  const W = el.clientWidth || 600, H = 240, m = { t: 10, r: 12, b: 24, l: 40 };
+  const weeks = [...new Set(d.data.map((r) => r.week))];
+  const apps = ["Benny's Farm", 'Kingdom Rise'];
+  const table = weeks.map((w) => { const o = { week: w }; for (const a of apps) o[a] = d3.sum(d.data.filter((r) => r.week === w && r.app === a), (r) => r.revenue); return o; });
+  const stack = d3.stack().keys(apps)(table);
+  const x = d3.scaleBand(weeks, [m.l, W - m.r]).padding(0.25);
+  const y = d3.scaleLinear([0, d3.max(table, (r) => apps.reduce((s, a) => s + r[a], 0)) || 1], [H - m.b, m.t]).nice();
+  const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Weekly ad revenue in US dollars for Benny\'s Farm and Kingdom Rise');
+  const every = Math.ceil(weeks.length / Math.max(2, Math.floor(W / 70)));
+  svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).tickValues(weeks.filter((w, i) => i % every === 0)).tickFormat((w) => d3.utcFormat('%-d %b')(new Date(w + 'T00:00:00Z'))).tickSizeOuter(0)).call((g) => g.select('.domain').style('stroke', 'var(--cds-chart-axis)')).call((g) => g.selectAll('line').remove());
+  svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(4).tickFormat(d3.format('$.2f')).tickSize(-(W - m.l - m.r))).call((g) => g.select('.domain').remove()).call((g) => g.selectAll('line').style('stroke', 'var(--cds-chart-grid)'));
+  const tip = document.createElement('div'); tip.className = 'tip'; tip.hidden = true; el.appendChild(tip);
+  for (const s of stack) {
+    svg.append('g').selectAll('rect').data(s).join('rect')
+      .attr('x', (p) => x(p.data.week)).attr('width', x.bandwidth())
+      .attr('y', (p) => y(p[1])).attr('height', (p) => Math.max(0, y(p[0]) - y(p[1])))
+      .style('fill', appColors[s.key])
+      .on('pointerenter', (ev, p) => {
+        tip.replaceChildren();
+        const h = document.createElement('div'); h.textContent = 'Week of ' + d3.utcFormat('%-d %b')(new Date(p.data.week + 'T00:00:00Z')); tip.appendChild(h);
+        for (const a of apps) { const l = document.createElement('div'); l.textContent = a + ': ' + fmtMoney(p.data[a]); tip.appendChild(l); }
+        tip.hidden = false;
+        const left = Math.min(x(p.data.week) / W * el.clientWidth + 10, el.clientWidth - 170);
+        tip.style.left = Math.max(0, left) + 'px'; tip.style.top = '10px';
+      })
+      .on('pointerleave', () => { tip.hidden = true; });
+  }
+});
+</script>

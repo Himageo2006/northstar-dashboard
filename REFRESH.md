@@ -2,7 +2,7 @@
 
 Dashboard: https://claude.ai/artifact/GtFwrbQtJYDnQAcCyLD3r4 (claude.ai "Data" artifact type).
 Its data are 6 attached CSV files, one per dataset document `datasets/<id>` in the artifact store.
-Local copies of the current CSVs live in `data/` next to this file. The page (`index.html`) does NOT need to change on a refresh.
+Local copies of the current CSVs live in `data/` next to this file. The claude.ai page (`artifact-page.html`, stored in the artifact as files/index.html) and the public GitHub Pages page (`index.html`, built by `node tools/build-pages.js` from artifact-page.html) do NOT need to change on a refresh.
 
 Rules: only READ from the consoles. Never change campaigns, apps, settings or anything else. Never click accept/consent/submit. If a site asks for sign-in, skip that source and report it.
 
@@ -48,7 +48,7 @@ App names come back like "Bennys Farm Village Life (Android)" / "Kingdom Rise Em
 - paid_ads.csv: campaign,app,network,period,spend_usd,impressions,taps,installs,cost_per_install_usd,daily_budget_usd (period like "Last 7 days to 12 Nov").
 - youtube.csv: metric,value,window,note with metrics Subscribers, Subscriber change, Views, Watch time (hours), Estimated revenue (USD).
 - youtube_videos.csv: title,published(YYYY-MM-DD),status(Public/Scheduled/…),views — shorten titles (drop emoji and "| Happy Kids TV").
-Quote any field containing a comma. Write to data/ (overwrite).
+Quote any field containing a comma. Write to data/ (overwrite). Also write data/meta.json as {"updated": "<D Mon YYYY>"} (e.g. "12 Nov 2026") — the public page shows it.
 
 If a source failed, keep its old CSV and do not touch that dataset.
 
@@ -62,7 +62,7 @@ Also update the asof line? No — the page text says "Snapshot collected 11 Nov"
 Dataset ids: apps, ios_daily, ads_daily, paid_ads, youtube, youtube_videos.
 
 ## 4. Save to GitHub
-In `D:\Claude ai\northstar-dashboard` (private repo github.com/Himageo2006/northstar-dashboard, branch main): `git add data && git commit -m "Daily data refresh <YYYY-MM-DD>"` then `git push`. Skip if nothing changed. Push only this repo.
+In `D:\Claude ai\northstar-dashboard` (repo github.com/Himageo2006/northstar-dashboard, branch main): `git add data && git commit -m "Daily data refresh <YYYY-MM-DD>"` then `git push`. Skip if nothing changed. Push only this repo. The repo is PUBLIC and serves the dashboard at https://himageo2006.github.io/northstar-dashboard/ — never commit tokens, keys or anything besides the data files.
 
 ## 5. Check
 Read `data/users/me/check` of the dashboard; if "failed", report what it says. Close Chrome tabs you opened.
