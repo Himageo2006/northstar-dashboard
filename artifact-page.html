@@ -8,11 +8,17 @@
 .nd .asof { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-top: var(--cds-gap-xs); }
 .nd section { display: grid; gap: var(--cds-gap-md); min-width: 0; }
 .nd .sub { margin: 0; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
-.nd .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--cds-gap-md); }
+.nd .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--cds-gap-md); }
 .nd .tile { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-xs); align-content: start; min-width: 0; }
 .nd .tile .lab { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); text-transform: uppercase; letter-spacing: .04em; }
 .nd .tile .num { font-family: var(--font-anthropic-serif); font-size: 2rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .nd .tile .note { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.nd .brk { list-style: none; margin: var(--cds-gap-sm) 0 0; padding: var(--cds-gap-sm) 0 0; border-top: 1px solid var(--color-border-line); display: grid; gap: 6px; font-size: var(--cds-font-size-caption); }
+.nd .brk:empty { display: none; }
+.nd .brk li { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--cds-gap-sm); align-items: baseline; }
+.nd .brk .k { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nd .brk .v { font-variant-numeric: tabular-nums; font-weight: var(--cds-font-weight-medium); text-align: right; }
+.nd .brk .d { grid-column: 1 / -1; color: var(--color-fg-muted); font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nd .good { color: var(--color-ok); } .nd .bad { color: var(--color-bad); } .nd .warn { color: var(--color-warn); }
 .nd .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--cds-gap-xl); }
 .nd .card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-sm); min-width: 0; }
@@ -44,11 +50,11 @@
 
   <section id="kpis" aria-label="Headline numbers">
     <div class="tiles">
-      <div class="tile"><span class="lab">New installs · 28 days</span><span class="num" data-draw="k-installs" data-source="totals" data-field="installs_28d">—</span><span class="note">All apps, both stores</span></div>
-      <div class="tile"><span class="lab">Monthly active · Android</span><span class="num" data-draw="k-mau" data-source="totals" data-field="play_mau">—</span><span class="note">Devices, last 28 days</span></div>
-      <div class="tile"><span class="lab">Ad revenue · 28 days</span><span class="num" data-draw="k-adrev" data-source="totals" data-field="ad_revenue_28d">—</span><span class="note" data-draw="k-adrev-chg">—</span></div>
-      <div class="tile"><span class="lab">Store sales · 28 days</span><span class="num" data-draw="k-store" data-source="totals" data-field="store_revenue_28d">—</span><span class="note">In-app purchases, after store fees</span></div>
-      <div class="tile"><span class="lab">YouTube subscribers</span><span class="num" data-draw="k-subs" data-source="youtube" data-where="metric=Subscribers" data-field="value">—</span><span class="note" data-draw="k-subs-chg">—</span></div>
+      <div class="tile"><span class="lab">New installs · 28 days</span><span class="num" data-draw="k-installs" data-source="totals" data-field="installs_28d">—</span><span class="note">All apps, both stores</span><ul class="brk" id="installs-by-app" data-draw="b-installs" data-source="by_app totals"></ul></div>
+      <div class="tile"><span class="lab">Monthly active · Android</span><span class="num" data-draw="k-mau" data-source="totals" data-field="play_mau">—</span><span class="note">Devices, last 28 days</span><ul class="brk" id="mau-by-app" data-draw="b-mau" data-source="by_app"></ul></div>
+      <div class="tile"><span class="lab">Ad revenue · 28 days</span><span class="num" data-draw="k-adrev" data-source="totals" data-field="ad_revenue_28d">—</span><span class="note" data-draw="k-adrev-chg">—</span><ul class="brk" id="adrev-by-app" data-draw="b-adrev" data-source="ad_by_app"></ul></div>
+      <div class="tile"><span class="lab">Store sales · 28 days</span><span class="num" data-draw="k-store" data-source="totals" data-field="store_revenue_28d">—</span><span class="note">In-app purchases, after store fees</span><ul class="brk" id="sales-by-app" data-draw="b-store" data-source="by_app"></ul></div>
+      <div class="tile"><span class="lab">YouTube subscribers</span><span class="num" data-draw="k-subs" data-source="youtube" data-where="metric=Subscribers" data-field="value">—</span><span class="note" data-draw="k-subs-chg">—</span><ul class="brk" id="youtube-summary" data-draw="b-yt" data-source="youtube youtube_videos"></ul></div>
     </div>
   </section>
 
@@ -165,6 +171,8 @@ dash.calc('totals', {
     const prev = ads.filter((r) => r.date >= prevFrom && r.date < from);
     return [{
       installs_28d: installs,
+      play_installs_28d: play,
+      ios_installs_28d: installs - play,
       android_share: installs ? play / installs : null,
       play_mau: d3.sum(apps.filter((r) => r.store === 'Google Play'), (r) => n(r.monthly_active)),
       store_revenue_28d: d3.sum(apps, (r) => n(r.store_revenue_usd_28d)),
@@ -172,6 +180,29 @@ dash.calc('totals', {
       ad_revenue_prev_28d: d3.sum(prev, (r) => n(r.ad_revenue_usd)),
       ad_revenue_change: d3.sum(prev, (r) => n(r.ad_revenue_usd)) ? d3.sum(cur, (r) => n(r.ad_revenue_usd)) / d3.sum(prev, (r) => n(r.ad_revenue_usd)) - 1 : null,
     }];
+  },
+});
+
+dash.calc('by_app', {
+  title: 'Installs, users and sales by app',
+  description: 'Per app: installs on Google Play and the App Store, Android monthly active devices with their change, and store sales, last 28 days.',
+  inputs: ['apps'],
+  fn: (apps) => {
+    const n = (v) => (v === null || v === '' || v === undefined ? 0 : +v);
+    const rows = d3.rollups(apps, (v) => {
+      const play = v.find((r) => r.store === 'Google Play');
+      const ios = v.find((r) => r.store === 'App Store');
+      return {
+        play_installs: play ? n(play.installs_28d) : 0,
+        ios_installs: ios ? n(ios.installs_28d) : 0,
+        installs: d3.sum(v, (r) => n(r.installs_28d)),
+        monthly_active: play ? n(play.monthly_active) : 0,
+        monthly_active_change_pct: play && play.monthly_active_change_pct !== null ? +play.monthly_active_change_pct : null,
+        store_revenue: d3.sum(v, (r) => n(r.store_revenue_usd_28d)),
+        play_status: play ? play.status : null,
+      };
+    }, (r) => r.app).map(([app, m]) => ({ app, ...m }));
+    return rows.sort((a, b) => b.installs - a.installs);
   },
 });
 
@@ -254,6 +285,77 @@ dash.draw('k-subs-chg', (el) => {
   if (v === null) { setText(el, '—'); return; }
   setText(el, (v >= 0 ? '+' : '') + fmtInt(v) + ' in the last 28 days');
   el.className = 'note ' + (v >= 0 ? 'good' : 'bad');
+});
+
+// Breakdown lists under the headline tiles: one line per item, value marked with its source row.
+const brkLine = (ul, label, value, mark, detail, cls) => {
+  const li = document.createElement('li');
+  const k = document.createElement('span'); k.className = 'k'; k.textContent = label;
+  const v = document.createElement('span'); v.className = 'v' + (cls ? ' ' + cls : ''); v.textContent = value;
+  if (mark) for (const [a, b] of Object.entries(mark)) v.setAttribute(a, b);
+  li.append(k, v);
+  if (detail) { const d = document.createElement('span'); d.className = 'd'; d.textContent = detail; d.title = detail; li.appendChild(d); }
+  ul.appendChild(li);
+  return li;
+};
+const enc = (s) => String(s).replace(/%/g, '%25').replace(/&/g, '%26').replace(/=/g, '%3D');
+const byApp = () => { const d = dash.data('by_app'); return d.status === 'ok' && Array.isArray(d.data) ? d.data : null; };
+
+dash.draw('b-installs', (ul) => {
+  ul.replaceChildren();
+  const rows = byApp(); const t = rowOf('totals');
+  if (!rows || !t) return;
+  brkLine(ul, 'Google Play', fmtInt(t.play_installs_28d), { 'data-source': 'totals', 'data-field': 'play_installs_28d', 'data-row': '0' });
+  brkLine(ul, 'App Store', fmtInt(t.ios_installs_28d), { 'data-source': 'totals', 'data-field': 'ios_installs_28d', 'data-row': '0' });
+  for (const r of rows.filter((x) => x.installs > 0)) {
+    brkLine(ul, r.app, fmtInt(r.installs), { 'data-source': 'by_app', 'data-field': 'installs', 'data-where': 'app=' + enc(r.app) },
+      'Play ' + fmtInt(r.play_installs) + (r.play_status && r.play_status !== 'Live' ? ' (' + r.play_status.toLowerCase() + ')' : '') + ' · iOS ' + fmtInt(r.ios_installs));
+  }
+});
+
+dash.draw('b-mau', (ul) => {
+  ul.replaceChildren();
+  const rows = byApp();
+  if (!rows) return;
+  for (const r of rows.filter((x) => x.monthly_active > 0).sort((a, b) => b.monthly_active - a.monthly_active)) {
+    const c = r.monthly_active_change_pct;
+    const li = brkLine(ul, r.app, fmtInt(r.monthly_active), { 'data-source': 'by_app', 'data-field': 'monthly_active', 'data-where': 'app=' + enc(r.app) },
+      c === null ? null : (c > 0 ? '+' : '') + c + '% vs previous 28 days');
+    const d = li.querySelector('.d');
+    if (d) d.classList.add(c >= 0 ? 'good' : 'bad');
+  }
+});
+
+dash.draw('b-adrev', (ul) => {
+  ul.replaceChildren();
+  const d = dash.data('ad_by_app');
+  if (d.status !== 'ok' || !Array.isArray(d.data)) return;
+  for (const r of d.data) {
+    brkLine(ul, r.app + ' · ' + r.platform, fmtMoney(r.revenue), { 'data-source': 'ad_by_app', 'data-field': 'revenue', 'data-where': 'app=' + enc(r.app) + '&platform=' + enc(r.platform) },
+      fmtInt(r.impressions) + ' ads shown' + (r.ecpm !== null ? ' · ' + fmtMoney(r.ecpm) + ' per 1,000' : ''));
+  }
+});
+
+dash.draw('b-store', (ul) => {
+  ul.replaceChildren();
+  const rows = byApp();
+  if (!rows) return;
+  const paid = rows.filter((x) => x.store_revenue > 0);
+  for (const r of paid) brkLine(ul, r.app, fmtMoney(r.store_revenue), { 'data-source': 'by_app', 'data-field': 'store_revenue', 'data-where': 'app=' + enc(r.app) });
+  const rest = rows.length - paid.length;
+  if (rest) brkLine(ul, rest + ' other apps', fmtMoney(0), null, 'No in-app purchases in either store');
+});
+
+dash.draw('b-yt', (ul) => {
+  ul.replaceChildren();
+  const views = ytVal('Views'), watch = ytVal('Watch time (hours)');
+  if (views !== null) brkLine(ul, 'Views, 28 days', fmtInt(views), { 'data-source': 'youtube', 'data-field': 'value', 'data-where': 'metric=Views' });
+  if (watch !== null) brkLine(ul, 'Watch time, 28 days', d3.format(',.1f')(watch) + ' h', { 'data-source': 'youtube', 'data-field': 'value', 'data-where': 'metric=Watch time (hours)' });
+  const v = dash.data('youtube_videos');
+  if (v.status === 'ok' && v.data.length) {
+    const top = v.data.slice().sort((a, b) => +b.views - +a.views)[0];
+    brkLine(ul, 'Best new upload', fmtInt(+top.views) + ' views', { 'data-source': 'youtube_videos', 'data-field': 'views', 'data-where': 'title=' + enc(top.title) }, top.title);
+  }
 });
 
 const cell = (tr, text, cls) => { const td = document.createElement('td'); td.textContent = text; if (cls) td.className = cls; tr.appendChild(td); return td; };
