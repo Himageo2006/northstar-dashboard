@@ -37,7 +37,7 @@ body { margin: 0; background: var(--color-bg); color: var(--color-fg); font: 14p
 <script>
 // Stand-in for the claude.ai dashboard runtime: same dash.data / calc / draw calls, fed from CSV files.
 (function () {
-  const files = ['apps', 'android_daily', 'ratings', 'ios_daily', 'ads_daily', 'paid_ads', 'youtube', 'youtube_videos'];
+  const files = ['apps', 'android_daily', 'ratings', 'ios_daily', 'ads_daily', 'paid_ads', 'youtube', 'youtube_videos', 'youtube_year', 'youtube_monthly', 'youtube_top'];
   const src = {}, calcs = [], draws = [], hooks = [];
   const state = (id) => src[id] || { status: 'loading', data: [] };
   window.dash = {
@@ -127,6 +127,12 @@ body { margin: 0; background: var(--color-bg); color: var(--color-fg); font: 14p
 .nd .store { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
 .nd details { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); line-height: 1.6; }
 .nd details summary { cursor: pointer; color: var(--color-fg); font-size: var(--cds-font-size-body); }
+.nd .jump { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--cds-gap-md); }
+.nd .jump a { text-decoration: none; font-size: var(--cds-font-size-caption); padding: 3px 10px; border-radius: 999px; border: 1px solid var(--color-border-line); background: var(--color-panel); color: var(--color-fg-muted); }
+.nd .jump a:hover { color: var(--color-fg); border-color: var(--cds-chart-axis); }
+.nd h3 { font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); margin: var(--cds-gap-sm) 0 0; }
+.nd .bar { display: inline-block; height: 8px; border-radius: 2px; background: var(--c1); vertical-align: middle; margin-right: 8px; opacity: .8; }
+.nd td.w { width: 45%; }
 [data-dash-source-state=refreshing] { opacity: .5; }
 </style>
 
@@ -135,6 +141,7 @@ body { margin: 0; background: var(--color-bg); color: var(--color-fg); font: 14p
     <h1>Northstar Apps Dashboard</h1>
     <p class="lede" data-read lang="en">In the last 28 days your apps got <b data-draw="t-installs" data-source="totals" data-field="installs_28d">—</b> new installs, <b data-draw="t-share" data-source="totals" data-field="android_share">—</b> of them from Google Play. In-app ads earned <b data-draw="t-adrev" data-source="totals" data-field="ad_revenue_28d">—</b>, and Apple Ads spent <b data-draw="t-spend" data-source="paid_totals" data-field="spend">—</b> in the last 7 days to win <b data-draw="t-paidinst" data-source="paid_totals" data-field="installs">—</b> iPhone installs.</p>
     <div class="asof" id="asof">Loading…</div>
+    <nav class="jump" aria-label="Sections"><a href="#attention">Needs attention</a><a href="#android-chart">Android trend</a><a href="#apps">Every app</a><a href="#ios-chart">iPhone trend</a><a href="#ads">In-app ads</a><a href="#paid">Apple Ads</a><a href="#youtube">YouTube</a><a href="#notes">Sources</a></nav>
   </header>
 
   <section id="kpis" aria-label="Headline numbers">
@@ -142,8 +149,9 @@ body { margin: 0; background: var(--color-bg); color: var(--color-fg); font: 14p
       <div class="tile"><span class="lab">New installs · 28 days</span><span class="num" data-draw="k-installs" data-source="totals" data-field="installs_28d">—</span><span class="note">All apps, both stores</span><ul class="brk" id="installs-by-app" data-draw="b-installs" data-source="by_app totals"></ul></div>
       <div class="tile"><span class="lab">Monthly active · Android</span><span class="num" data-draw="k-mau" data-source="totals" data-field="play_mau">—</span><span class="note">Devices, last 28 days</span><ul class="brk" id="mau-by-app" data-draw="b-mau" data-source="by_app"></ul></div>
       <div class="tile"><span class="lab">Ad revenue · 28 days</span><span class="num" data-draw="k-adrev" data-source="totals" data-field="ad_revenue_28d">—</span><span class="note" data-draw="k-adrev-chg">—</span><ul class="brk" id="adrev-by-app" data-draw="b-adrev" data-source="ad_by_app"></ul></div>
+      <div class="tile"><span class="lab">Total earnings · 28 days</span><span class="num" data-draw="k-earn" data-source="earnings" data-field="total">—</span><span class="note">Ads, store sales and YouTube together</span><ul class="brk" id="earnings-by-source" data-draw="b-earn" data-source="earnings"></ul></div>
       <div class="tile"><span class="lab">Store sales · 28 days</span><span class="num" data-draw="k-store" data-source="totals" data-field="store_revenue_28d">—</span><span class="note">In-app purchases, after store fees</span><ul class="brk" id="sales-by-app" data-draw="b-store" data-source="by_app"></ul></div>
-      <div class="tile"><span class="lab">YouTube subscribers</span><span class="num" data-draw="k-subs" data-source="youtube" data-where="metric=Subscribers" data-field="value">—</span><span class="note" data-draw="k-subs-chg">—</span><ul class="brk" id="youtube-summary" data-draw="b-yt" data-source="youtube youtube_videos"></ul></div>
+      <div class="tile"><span class="lab">YouTube subscribers</span><span class="num" data-draw="k-subs" data-source="youtube" data-where="metric=Subscribers" data-field="value">—</span><span class="note" data-draw="k-subs-chg">—</span><ul class="brk" id="youtube-summary" data-draw="b-yt" data-source="youtube youtube_year youtube_videos"></ul></div>
     </div>
   </section>
 
@@ -224,6 +232,26 @@ body { margin: 0; background: var(--color-bg); color: var(--color-fg); font: 14p
 
   <section id="youtube">
     <h2>Happy Kids TV on YouTube</h2>
+    <h3>Last 12 months</h3>
+    <div class="tiles">
+      <div class="tile"><span class="lab">Watch time · 365 days</span><span class="num" data-draw="yy-watch" data-source="youtube_year" data-where="metric=Watch time (hours)" data-field="value">—</span><span class="note" data-draw="yy-watch-chg">Hours</span></div>
+      <div class="tile"><span class="lab">Views · 365 days</span><span class="num" data-draw="yy-views" data-source="youtube_year" data-where="metric=Views" data-field="value">—</span><span class="note" data-draw="yy-dur">—</span></div>
+      <div class="tile"><span class="lab">Subscribers gained · 365 days</span><span class="num" data-draw="yy-subs" data-source="youtube_year" data-where="metric=Subscribers gained" data-field="value">—</span><span class="note" data-draw="yy-subs-chg">—</span></div>
+      <div class="tile"><span class="lab">Estimated revenue · 365 days</span><span class="num" data-draw="yy-rev" data-source="youtube_year" data-where="metric=Estimated revenue (USD)" data-field="value">—</span><span class="note">YouTube ads on the channel's videos</span></div>
+    </div>
+    <div class="card">
+      <h2>Watch hours per month</h2>
+      <p class="sub" data-draw="yt-month-sub">—</p>
+      <div class="chart" data-draw="yt-month-chart" data-source="youtube_monthly"></div>
+    </div>
+    <p class="sub">Most-watched videos over the last 365 days.</p>
+    <div class="tw">
+      <table data-source="youtube_top" data-row-key="title">
+        <thead><tr><th data-field="rank">#</th><th data-field="title">Video</th><th data-field="views">Views</th></tr></thead>
+        <tbody data-draw="yt-top-table"></tbody>
+      </table>
+    </div>
+    <h3>Last 28 days</h3>
     <div class="tiles">
       <div class="tile"><span class="lab">Views · 28 days</span><span class="num" data-draw="y-views" data-source="youtube" data-where="metric=Views" data-field="value">—</span><span class="note">Usual range 3,600 to 85,300</span></div>
       <div class="tile"><span class="lab">Watch time · 28 days</span><span class="num" data-draw="y-watch" data-source="youtube" data-where="metric=Watch time (hours)" data-field="value">—</span><span class="note">Hours</span></div>
@@ -243,7 +271,7 @@ body { margin: 0; background: var(--color-bg); color: var(--color-fg); font: 14p
     <p>Google Play: Play Console app list, last 28 days to 10 Nov (device acquisitions and monthly active devices). Play shows no store sales because none of the apps sold in-app items there.</p>
     <p>App Store: App Store Connect Analytics, first-time downloads and proceeds per day. Mud Engineer Pro went live on iOS on 10 Nov, so it has no downloads yet.</p>
     <p>In-app ads: LevelPlay performance report, revenue, impressions and ad users per app and day, 12 Sep to 10 Nov. Only Benny's Farm and Kingdom Rise show ads.</p>
-    <p>Apple Ads: campaign report, last 7 days to 11 Nov. YouTube: YouTube Studio channel analytics, 14 Oct to 10 Nov.</p>
+    <p>Apple Ads: campaign report, last 7 days to 11 Nov. YouTube: YouTube Studio channel analytics, 14 Oct to 10 Nov for the 28-day figures, and advanced mode (by month) for 11 Nov 2025 to 10 Nov 2026. The first and last months are partial. Total earnings add in-app ad revenue, store sales after fees and YouTube's estimated revenue; Apple Ads spend is not subtracted.</p>
   </details>
 </div>
 
@@ -339,9 +367,9 @@ dash.calc('ad_by_app', {
 
 dash.calc('alerts', {
   title: 'Needs attention',
-  description: 'Rules applied to the other sources: Play installs or monthly players down 10% or more (up 10% or more is good news), Apple Ads cost per install over $5, ratings under 4 stars, YouTube views under the usual range or subscribers falling, games showing under 0.5 ads per player a day.',
-  inputs: ['apps', 'paid_ads', 'ratings', 'youtube', 'ads_daily'],
-  fn: (apps, paid_ads, ratings, youtube, ads_daily) => {
+  description: 'Rules applied to the other sources: Play installs or monthly players down 10% or more (up 10% or more is good news), Apple Ads cost per install over $5, ratings under 4 stars, YouTube views under the usual range, subscribers falling or yearly watch time down 25% or more, games showing under 0.5 ads per player a day.',
+  inputs: ['apps', 'paid_ads', 'ratings', 'youtube', 'ads_daily', 'youtube_year'],
+  fn: (apps, paid_ads, ratings, youtube, ads_daily, youtube_year) => {
     const out = [];
     const add = (level, title, detail, value) => out.push({ level, title, detail, value });
     for (const r of apps.filter((x) => x.store === 'Google Play' && x.status === 'Live')) {
@@ -364,6 +392,8 @@ dash.calc('alerts', {
     if (yv && yv.note && /Typical range (\d+)/.test(yv.note) && +yv.value < +yv.note.match(/Typical range (\d+)/)[1]) add('warn', 'YouTube views below the usual range', (+yv.value).toLocaleString('en') + ' views in 28 days; the channel normally gets at least ' + (+yv.note.match(/Typical range (\d+)/)[1]).toLocaleString('en') + '.', +yv.value);
     const ys = youtube.find((x) => x.metric === 'Subscriber change');
     if (ys && +ys.value < 0) add('warn', 'YouTube lost ' + Math.abs(+ys.value).toLocaleString('en') + ' subscribers', 'Net change over the last 28 days. Regular uploads usually slow the loss.', +ys.value);
+    const yw = youtube_year.find((x) => x.metric === 'Watch time (hours)');
+    if (yw && yw.change_pct !== null && +yw.change_pct <= -25) add('warn', 'YouTube watch time down ' + Math.abs(+yw.change_pct) + '% on the year', (+yw.value).toLocaleString('en') + ' hours watched in the last 365 days, compared with the 365 days before.', +yw.change_pct);
     const end = d3.max(ads_daily, (r) => r.date);
     if (end) {
       const from = new Date(new Date(end + 'T00:00:00Z') - 27 * 864e5).toISOString().slice(0, 10);
@@ -384,6 +414,22 @@ dash.calc('ad_weekly', {
     const rows = [];
     for (const [week, byApp] of g) for (const [app, revenue] of byApp) rows.push({ week, app, revenue: Math.round(revenue * 100) / 100 });
     return rows.sort((a, b) => d3.ascending(a.week, b.week));
+  },
+});
+
+dash.calc('earnings', {
+  title: 'Total earnings, last 28 days',
+  description: 'In-app ad revenue (LevelPlay, last 28 days of data), store sales after fees and YouTube estimated revenue, each over 28 days, and their sum. Apple Ads spend is not subtracted.',
+  inputs: ['apps', 'ads_daily', 'youtube'],
+  fn: (apps, ads, youtube) => {
+    const n = (v) => (v === null || v === '' || v === undefined ? 0 : +v);
+    const end = d3.max(ads, (r) => r.date);
+    const from = end ? new Date(new Date(end + 'T00:00:00Z') - 27 * 864e5).toISOString().slice(0, 10) : '';
+    const ad = d3.sum(ads.filter((r) => r.date >= from), (r) => n(r.ad_revenue_usd));
+    const store = d3.sum(apps, (r) => n(r.store_revenue_usd_28d));
+    const yt = youtube.find((x) => x.metric === 'Estimated revenue (USD)');
+    const ytv = yt ? n(yt.value) : 0;
+    return [{ ad_revenue: ad, store_sales: store, youtube_revenue: ytv, total: ad + store + ytv }];
   },
 });
 
@@ -500,10 +546,93 @@ dash.draw('b-yt', (ul) => {
   const views = ytVal('Views'), watch = ytVal('Watch time (hours)');
   if (views !== null) brkLine(ul, 'Views, 28 days', fmtInt(views), { 'data-source': 'youtube', 'data-field': 'value', 'data-where': 'metric=Views' });
   if (watch !== null) brkLine(ul, 'Watch time, 28 days', d3.format(',.1f')(watch) + ' h', { 'data-source': 'youtube', 'data-field': 'value', 'data-where': 'metric=Watch time (hours)' });
+  const yw = yyRow('Watch time (hours)');
+  if (yw && yw.value !== null) brkLine(ul, 'Watch time, 12 months', d3.format(',.1f')(+yw.value) + ' h', { 'data-source': 'youtube_year', 'data-field': 'value', 'data-where': 'metric=Watch time (hours)' });
   const v = dash.data('youtube_videos');
   if (v.status === 'ok' && v.data.length) {
     const top = v.data.slice().sort((a, b) => +b.views - +a.views)[0];
     brkLine(ul, 'Best new upload', fmtInt(+top.views) + ' views', { 'data-source': 'youtube_videos', 'data-field': 'views', 'data-where': 'title=' + enc(top.title) }, top.title);
+  }
+});
+
+one('k-earn', 'earnings', 'total', fmtMoney);
+dash.draw('b-earn', (ul) => {
+  ul.replaceChildren();
+  const r = rowOf('earnings');
+  if (!r) return;
+  brkLine(ul, 'In-app ads', fmtMoney(r.ad_revenue), { 'data-source': 'earnings', 'data-field': 'ad_revenue', 'data-row': '0' }, 'LevelPlay, Benny\'s Farm and Kingdom Rise');
+  brkLine(ul, 'Store sales', fmtMoney(r.store_sales), { 'data-source': 'earnings', 'data-field': 'store_sales', 'data-row': '0' }, 'App Store and Google Play, after fees');
+  brkLine(ul, 'YouTube', fmtMoney(r.youtube_revenue), { 'data-source': 'earnings', 'data-field': 'youtube_revenue', 'data-row': '0' }, 'Happy Kids TV estimated revenue');
+  const p = rowOf('paid_totals');
+  if (p) brkLine(ul, 'Apple Ads spend, 7 days', '−' + fmtMoney(p.spend), { 'data-source': 'paid_totals', 'data-field': 'spend', 'data-row': '0' }, 'Shown for comparison, not subtracted', 'bad');
+});
+
+// YouTube, last 12 months
+const yyRow = (metric) => { const d = dash.data('youtube_year'); return d.status === 'ok' ? d.data.find((x) => x.metric === metric) || null : null; };
+const yyOne = (name, metric, fmt) => dash.draw(name, (el) => { const r = yyRow(metric); setText(el, r && r.value !== null ? fmt(+r.value) : '—'); });
+yyOne('yy-watch', 'Watch time (hours)', d3.format(',.1f'));
+yyOne('yy-views', 'Views', fmtInt);
+yyOne('yy-subs', 'Subscribers gained', (v) => '+' + fmtInt(v));
+yyOne('yy-rev', 'Estimated revenue (USD)', d3.format('$,.2f'));
+const yyChg = (name, metric, unit) => dash.draw(name, (el) => {
+  const r = yyRow(metric);
+  if (!r || r.change_pct === null) { setText(el, unit); el.className = 'note'; return; }
+  const c = +r.change_pct;
+  setText(el, unit + ' · ' + (c > 0 ? '+' : '') + c + '% vs the 365 days before');
+  el.className = 'note ' + (c >= 0 ? 'good' : 'bad');
+});
+yyChg('yy-watch-chg', 'Watch time (hours)', 'Hours');
+yyChg('yy-subs-chg', 'Subscribers gained', 'New subscribers');
+dash.draw('yy-dur', (el) => { const r = yyRow('Average view duration (sec)'); setText(el, r && r.value !== null ? 'Average view ' + Math.floor(+r.value / 60) + ':' + String(+r.value % 60).padStart(2, '0') : '—'); });
+
+const monthLabel = (m) => d3.utcFormat('%b %Y')(new Date(m + '-01T00:00:00Z'));
+dash.draw('yt-month-sub', (el) => {
+  const d = dash.data('youtube_monthly');
+  if (d.status !== 'ok' || !d.data.length) { setText(el, '—'); return; }
+  const rows = d.data;
+  const peak = rows.reduce((a, b) => (+b.watch_hours > +a.watch_hours ? b : a));
+  const last = rows.filter((r) => !r.note || !/to \d/.test(r.note)).slice(-1)[0] || rows[rows.length - 1];
+  setText(el, 'From YouTube Studio advanced mode. Watch hours peaked at ' + d3.format(',.0f')(+peak.watch_hours) + ' in ' + monthLabel(peak.month) + ' and were ' + d3.format(',.1f')(+last.watch_hours) + ' in ' + monthLabel(last.month) + '. The first and last bars are part-months (lighter).');
+});
+dash.draw('yt-month-chart', (el) => {
+  const d = dash.data('youtube_monthly');
+  if (d.status !== 'ok' || !Array.isArray(d.data)) { failed(el, d); return; }
+  el.replaceChildren();
+  const W = el.clientWidth || 600, H = 240, m = { t: 10, r: 12, b: 24, l: 44 };
+  const rows = d.data.map((r) => ({ ...r, wh: +r.watch_hours, partial: !!r.note }));
+  const x = d3.scaleBand(rows.map((r) => r.month), [m.l, W - m.r]).padding(0.25);
+  const y = d3.scaleLinear([0, d3.max(rows, (r) => r.wh) || 1], [H - m.b, m.t]).nice();
+  const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'YouTube watch hours per month over the last 12 months');
+  const every = Math.ceil(rows.length / Math.max(2, Math.floor(W / 60)));
+  svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).tickValues(rows.map((r) => r.month).filter((v, i) => i % every === 0)).tickFormat((v) => d3.utcFormat('%b %y')(new Date(v + '-01T00:00:00Z'))).tickSizeOuter(0)).call((g) => g.select('.domain').style('stroke', 'var(--cds-chart-axis)')).call((g) => g.selectAll('line').remove());
+  svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(4).tickFormat(d3.format('~s')).tickSize(-(W - m.l - m.r))).call((g) => g.select('.domain').remove()).call((g) => g.selectAll('line').style('stroke', 'var(--cds-chart-grid)'));
+  const tip = document.createElement('div'); tip.className = 'tip'; tip.hidden = true; el.appendChild(tip);
+  svg.append('g').selectAll('rect').data(rows).join('rect')
+    .attr('x', (r) => x(r.month)).attr('width', x.bandwidth())
+    .attr('y', (r) => y(r.wh)).attr('height', (r) => Math.max(0, y(0) - y(r.wh)))
+    .attr('rx', 2).style('fill', 'var(--c1)').style('opacity', (r) => (r.partial ? 0.45 : 1))
+    .on('pointerenter', (ev, r) => {
+      tip.replaceChildren();
+      const lines = [monthLabel(r.month) + (r.note ? ' (' + r.note + ')' : ''), d3.format(',.1f')(r.wh) + ' watch hours', fmtInt(+r.views) + ' views', fmtMoney(+r.revenue_usd) + ' revenue'];
+      lines.forEach((t, i) => { const l = document.createElement('div'); l.textContent = t; if (!i) l.style.fontWeight = '500'; tip.appendChild(l); });
+      tip.hidden = false;
+      tip.style.left = Math.max(0, Math.min(x(r.month) / W * el.clientWidth + 10, el.clientWidth - 170)) + 'px'; tip.style.top = '10px';
+    })
+    .on('pointerleave', () => { tip.hidden = true; });
+});
+dash.draw('yt-top-table', (tb) => {
+  const d = dash.data('youtube_top');
+  tb.replaceChildren();
+  if (d.status !== 'ok') return;
+  const max = d3.max(d.data, (r) => +r.views) || 1;
+  for (const r of d.data) {
+    const tr = document.createElement('tr');
+    tr.dataset.key = encodeURIComponent(r.title);
+    cell(tr, r.rank, 'store'); cell(tr, r.title);
+    const td = cell(tr, '', 'w');
+    const b = document.createElement('span'); b.className = 'bar'; b.style.width = Math.max(2, Math.round((+r.views / max) * 160)) + 'px';
+    td.append(b, fmtInt(+r.views));
+    tb.appendChild(tr);
   }
 });
 

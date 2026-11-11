@@ -48,7 +48,7 @@ body { margin: 0; background: var(--color-bg); color: var(--color-fg); font: 14p
 <script>
 // Stand-in for the claude.ai dashboard runtime: same dash.data / calc / draw calls, fed from CSV files.
 (function () {
-  const files = ['apps', 'android_daily', 'ratings', 'ios_daily', 'ads_daily', 'paid_ads', 'youtube', 'youtube_videos'];
+  const files = ['apps', 'android_daily', 'ratings', 'ios_daily', 'ads_daily', 'paid_ads', 'youtube', 'youtube_videos', 'youtube_year', 'youtube_monthly', 'youtube_top'];
   const src = {}, calcs = [], draws = [], hooks = [];
   const state = (id) => src[id] || { status: 'loading', data: [] };
   window.dash = {
