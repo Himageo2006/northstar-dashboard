@@ -61,6 +61,9 @@ For each changed CSV:
 Also update the asof line? No — the page text says "Snapshot collected 11 Nov"; replace that date: `ArtifactData update` files/index.html `edit` first, then `str_replace` field `text` old "Snapshot collected <old date>" → new date (read the doc first to find the current date and version).
 Dataset ids: apps, ios_daily, ads_daily, paid_ads, youtube, youtube_videos.
 
-## 4. Check
+## 4. Save to GitHub
+In `D:\Claude ai\northstar-dashboard` (private repo github.com/Himageo2006/northstar-dashboard, branch main): `git add data && git commit -m "Daily data refresh <YYYY-MM-DD>"` then `git push`. Skip if nothing changed. Push only this repo.
+
+## 5. Check
 Read `data/users/me/check` of the dashboard; if "failed", report what it says. Close Chrome tabs you opened.
 Report in 3–5 lines: which sources refreshed, any that failed, and the headline numbers (28-day installs, ad revenue, Apple Ads 7-day spend/installs, YouTube subscribers).
