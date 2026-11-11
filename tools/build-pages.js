@@ -1,11 +1,13 @@
 // Builds index.html (GitHub Pages) from artifact-page.html, the page the claude.ai dashboard runs.
-// Adds a small stand-in for the dashboard runtime that loads ../data/*.csv, so both copies draw the same.
+// Adds a small stand-in for the dashboard runtime that loads data/*.csv, so both copies draw the same.
 const fs = require('fs');
 const path = require('path');
 const root = path.join(__dirname, '..');
 const page = fs.readFileSync(path.join(root, 'artifact-page.html'), 'utf8')
   .replace('<meta name="dash-one-writer">', '')
-  .replace(/<div class="asof">[^<]*<\/div>/, '<div class="asof" id="asof">Loading…</div>');
+  .replace(/<div class="asof">[^<]*<\/div>/, '<div class="asof" id="asof">Loading…</div>')
+  // each page script gets its own scope, as in the dashboard runtime
+  .replace(/<script>/g, '<script>{').replace(/<\/script>/g, '}</script>');
 
 const head = `<!doctype html>
 <html lang="en">

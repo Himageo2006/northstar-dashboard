@@ -217,7 +217,7 @@ body { margin: 0; background: var(--color-bg); color: var(--color-fg); font: 14p
   </details>
 </div>
 
-<script>
+<script>{
 const num = (v) => (v === null || v === undefined || v === '' ? null : +v);
 const lastWindow = (rows, days) => {
   const end = d3.max(rows, (r) => r.date);
@@ -293,9 +293,9 @@ dash.calc('paid_totals', {
   inputs: ['paid_ads'],
   fn: (paid_ads) => [{ spend: d3.sum(paid_ads, (r) => +r.spend_usd), installs: d3.sum(paid_ads, (r) => +r.installs) }],
 });
-</script>
+}</script>
 
-<script>
+<script>{
 const num = (v) => (v === null || v === undefined || v === '' ? null : +v);
 const fmtInt = d3.format(',');
 const fmtMoney = (v) => (v === null || isNaN(v) ? '—' : v < 10 ? d3.format('$.2f')(v) : d3.format('$,.0f')(v));
@@ -479,7 +479,7 @@ dash.draw('ad-chart', (el) => {
       .on('pointerleave', () => { tip.hidden = true; });
   }
 });
-</script>
+}</script>
 
 </div>
 </body>
