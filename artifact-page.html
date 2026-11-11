@@ -53,6 +53,13 @@
 .nd h3 { font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); margin: var(--cds-gap-sm) 0 0; }
 .nd .bar { display: inline-block; height: 8px; border-radius: 2px; background: var(--c1); vertical-align: middle; margin-right: 8px; opacity: .8; }
 .nd td.w { width: 45%; }
+.nd .sc { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--cds-gap-md); }
+.nd .sc .tile h3 { margin: 0; font-size: var(--cds-font-size-heading); }
+.nd .sc .pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.nd .sc .big { font-family: var(--font-anthropic-serif); font-size: 1.6rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.nd .sc .brk { margin-top: var(--cds-gap-xs); }
+.nd .tile .note.good, .nd .brk .d.good { color: var(--color-ok); }
+.nd .tile .note.bad, .nd .brk .d.bad { color: var(--color-bad); }
 [data-dash-source-state=refreshing] { opacity: .5; }
 </style>
 
@@ -61,7 +68,7 @@
     <h1>Northstar Apps Dashboard</h1>
     <p class="lede" data-read lang="en">In the last 28 days your apps got <b data-draw="t-installs" data-source="totals" data-field="installs_28d">—</b> new installs, <b data-draw="t-share" data-source="totals" data-field="android_share">—</b> of them from Google Play. In-app ads earned <b data-draw="t-adrev" data-source="totals" data-field="ad_revenue_28d">—</b>, and Apple Ads spent <b data-draw="t-spend" data-source="paid_totals" data-field="spend">—</b> in the last 7 days to win <b data-draw="t-paidinst" data-source="paid_totals" data-field="installs">—</b> iPhone installs.</p>
     <div class="asof">Snapshot collected 11 Nov 2026 from Play Console, App Store Connect, LevelPlay, Apple Ads and YouTube Studio.</div>
-    <nav class="jump" aria-label="Sections"><a href="#attention">Needs attention</a><a href="#android-chart">Android trend</a><a href="#apps">Every app</a><a href="#ios-chart">iPhone trend</a><a href="#ads">In-app ads</a><a href="#paid">Apple Ads</a><a href="#youtube">YouTube</a><a href="#notes">Sources</a></nav>
+    <nav class="jump" aria-label="Sections"><a href="#attention">Needs attention</a><a href="#scorecards">App by app</a><a href="#android-chart">Android trend</a><a href="#apps">Every app</a><a href="#ios-chart">iPhone trend</a><a href="#ads">In-app ads</a><a href="#paid">Apple Ads</a><a href="#funnel">App Store funnel</a><a href="#youtube">YouTube</a><a href="#notes">Sources</a></nav>
   </header>
 
   <section id="kpis" aria-label="Headline numbers">
@@ -79,6 +86,12 @@
     <h2>Needs attention</h2>
     <p class="sub">Picked out automatically from the numbers below: installs or players down 10% or more, paid installs costing over $5, ratings under 4 stars, YouTube below its usual range. Good news shows in green.</p>
     <ul class="alerts" data-draw="alerts" data-source="alerts"></ul>
+  </section>
+
+  <section id="scorecards">
+    <h2>App by app · this week</h2>
+    <p class="sub">Installs over the last 7 days of data compared with the 7 days before, from the daily Play Console and App Store Connect figures, plus each app's players, ratings, ad revenue and Apple Ads cost.</p>
+    <div class="sc" data-draw="scorecards" data-source="scorecard"></div>
   </section>
 
   <section id="android-chart" class="card">
@@ -146,6 +159,20 @@
           <th class="r" data-field="taps">Taps</th><th class="r" data-field="installs">Installs</th><th class="r" data-field="cost_per_install_usd">Cost per install</th>
         </tr></thead>
         <tbody data-draw="paid-table"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="funnel">
+    <h2>App Store page funnel · last 28 days</h2>
+    <p class="sub">How iPhone shoppers move from seeing an app (impressions in search and browse) to opening its page and downloading it. A low page-to-download rate points at the screenshots, video and description; a low view rate points at the icon, name and subtitle.</p>
+    <div class="tw">
+      <table data-source="ios_funnel" data-row-key="app">
+        <thead><tr>
+          <th data-field="app">App</th><th class="r" data-field="impressions">Impressions</th><th class="r" data-field="page_views">Page views</th>
+          <th class="r" data-field="view_rate">Saw it → opened page</th><th class="r" data-field="downloads">Downloads</th><th class="r" data-field="conversion">Opened page → downloaded</th>
+        </tr></thead>
+        <tbody data-draw="funnel-table"></tbody>
       </table>
     </div>
   </section>
@@ -353,6 +380,63 @@ dash.calc('earnings', {
   },
 });
 
+dash.calc('scorecard', {
+  title: 'App scorecard',
+  description: 'One row per app: Android installs and iPhone downloads over the last 7 days of each daily source against the 7 days before, Android monthly active devices, Play and App Store ratings, in-app ad revenue for the last 28 days and the Apple Ads cost per install.',
+  inputs: ['apps', 'android_daily', 'ios_daily', 'ratings', 'ads_daily', 'paid_ads'],
+  fn: (apps, android, ios, ratings, ads, paid) => {
+    const n = (v) => (v === null || v === '' || v === undefined ? 0 : +v);
+    const iso = (d) => d.toISOString().slice(0, 10);
+    const weeks = (rows, field) => {
+      const end = d3.max(rows, (r) => r.date);
+      if (!end) return () => [0, 0, null];
+      const e = new Date(end + 'T00:00:00Z');
+      const f1 = iso(new Date(e - 6 * 864e5)), f0 = iso(new Date(e - 13 * 864e5));
+      return (app) => [d3.sum(rows.filter((r) => r.app === app && r.date >= f1), (r) => n(r[field])), d3.sum(rows.filter((r) => r.app === app && r.date >= f0 && r.date < f1), (r) => n(r[field])), end];
+    };
+    const aw = weeks(android, 'installs'), iw = weeks(ios, 'downloads');
+    const adEnd = d3.max(ads, (r) => r.date);
+    const adFrom = adEnd ? iso(new Date(new Date(adEnd + 'T00:00:00Z') - 27 * 864e5)) : '';
+    const out = [];
+    for (const app of [...new Set(apps.map((r) => r.app))]) {
+      const play = apps.find((r) => r.app === app && r.store === 'Google Play');
+      const store = apps.find((r) => r.app === app && r.store === 'App Store');
+      const [a7, a7p, aEnd] = aw(app), [i7, i7p, iEnd] = iw(app);
+      const pr = ratings.find((r) => r.app === app && r.store === 'Google Play');
+      const ir = ratings.find((r) => r.app === app && r.store === 'App Store');
+      const pd = paid.filter((r) => r.app === app);
+      const spend = d3.sum(pd, (r) => n(r.spend_usd)), pinst = d3.sum(pd, (r) => n(r.installs));
+      out.push({
+        app,
+        play_status: play ? play.status : null, ios_status: store ? store.status : null,
+        android_7d: play ? a7 : null, android_prev_7d: play ? a7p : null, android_through: aEnd,
+        ios_7d: store ? i7 : null, ios_prev_7d: store ? i7p : null, ios_through: iEnd,
+        installs_7d: (play ? a7 : 0) + (store ? i7 : 0), installs_prev_7d: (play ? a7p : 0) + (store ? i7p : 0),
+        monthly_active: play && play.monthly_active !== null ? +play.monthly_active : null,
+        play_rating: pr && pr.rating !== null ? +pr.rating : null, ios_rating: ir && ir.rating !== null ? +ir.rating : null,
+        ad_revenue_28d: d3.sum(ads.filter((r) => r.app === app && r.date >= adFrom), (r) => n(r.ad_revenue_usd)),
+        apple_ads_cpi: pinst ? Math.round((spend / pinst) * 100) / 100 : null,
+      });
+    }
+    return out.sort((a, b) => b.installs_7d - a.installs_7d);
+  },
+});
+
+dash.calc('ios_funnel', {
+  title: 'App Store page funnel',
+  description: 'Per app over the last 28 days of App Store Connect data: impressions, product page views, first-time downloads, the share of impressions that opened the page and the share of page views that downloaded.',
+  inputs: ['ios_daily'],
+  fn: (ios) => {
+    const end = d3.max(ios, (r) => r.date);
+    if (!end) return [];
+    const from = new Date(new Date(end + 'T00:00:00Z') - 27 * 864e5).toISOString().slice(0, 10);
+    return d3.rollups(ios.filter((r) => r.date >= from), (v) => {
+      const impressions = d3.sum(v, (r) => +r.impressions), page_views = d3.sum(v, (r) => +r.page_views), downloads = d3.sum(v, (r) => +r.downloads);
+      return { impressions, page_views, downloads, view_rate: impressions ? page_views / impressions : null, conversion: page_views ? downloads / page_views : null };
+    }, (r) => r.app).map(([app, m]) => ({ app, ...m })).sort((a, b) => b.impressions - a.impressions);
+  },
+});
+
 dash.calc('paid_totals', {
   title: 'Apple Ads totals',
   description: 'Spend and installs added up across Apple Ads campaigns for the last 7 days.',
@@ -552,6 +636,64 @@ dash.draw('yt-top-table', (tb) => {
     const td = cell(tr, '', 'w');
     const b = document.createElement('span'); b.className = 'bar'; b.style.width = Math.max(2, Math.round((+r.views / max) * 160)) + 'px';
     td.append(b, fmtInt(+r.views));
+    tb.appendChild(tr);
+  }
+});
+
+// App by app cards; each value is marked with its scorecard row.
+const wow = (cur, prev) => (prev ? (cur >= prev ? '+' : '') + fmtPct(cur / prev - 1) + ' vs week before' : cur ? 'new this week' : 'none either week');
+dash.draw('scorecards', (box) => {
+  box.replaceChildren();
+  const d = dash.data('scorecard');
+  if (d.status !== 'ok' || !Array.isArray(d.data)) return;
+  const shortDate = (s) => (s ? d3.utcFormat('%-d %b')(new Date(s + 'T00:00:00Z')) : '');
+  for (const r of d.data) {
+    const w = 'app=' + enc(r.app);
+    const mk = (field) => ({ 'data-source': 'scorecard', 'data-field': field, 'data-where': w });
+    const t = document.createElement('div'); t.className = 'tile';
+    const h = document.createElement('h3'); h.textContent = r.app;
+    const pills = document.createElement('div'); pills.className = 'pills';
+    for (const [lab, st] of [['Play', r.play_status], ['iOS', r.ios_status]]) {
+      if (!st) continue;
+      const p = document.createElement('span'); p.className = 'pill ' + (st === 'Live' ? 'live' : 'test'); p.textContent = lab + ' · ' + st; pills.appendChild(p);
+    }
+    const lab = document.createElement('span'); lab.className = 'lab'; lab.textContent = 'Installs · last 7 days';
+    const big = document.createElement('span'); big.className = 'big'; big.textContent = fmtInt(r.installs_7d);
+    for (const [a, b] of Object.entries(mk('installs_7d'))) big.setAttribute(a, b);
+    const note = document.createElement('span'); note.className = 'note';
+    note.textContent = wow(r.installs_7d, r.installs_prev_7d);
+    if (r.installs_prev_7d) note.classList.add(r.installs_7d >= r.installs_prev_7d ? 'good' : 'bad');
+    const ul = document.createElement('ul'); ul.className = 'brk';
+    if (r.android_7d !== null) brkLine(ul, 'Android', fmtInt(r.android_7d), mk('android_7d'), wow(r.android_7d, r.android_prev_7d) + ' · to ' + shortDate(r.android_through));
+    if (r.ios_7d !== null) brkLine(ul, 'iPhone', fmtInt(r.ios_7d), mk('ios_7d'), wow(r.ios_7d, r.ios_prev_7d) + ' · to ' + shortDate(r.ios_through));
+    if (r.monthly_active !== null) brkLine(ul, 'Android players, 28 days', fmtInt(r.monthly_active), mk('monthly_active'));
+    if (r.play_rating !== null || r.ios_rating !== null) {
+      const parts = [];
+      if (r.play_rating !== null) parts.push('Play ★ ' + r.play_rating.toFixed(1));
+      if (r.ios_rating !== null) parts.push('iOS ★ ' + r.ios_rating.toFixed(1));
+      brkLine(ul, 'Rating', parts.join(' · '), mk(r.play_rating !== null ? 'play_rating' : 'ios_rating'), null, (r.play_rating !== null && r.play_rating < 4) ? 'warn' : null);
+    }
+    if (r.ad_revenue_28d > 0) brkLine(ul, 'Ad revenue, 28 days', fmtMoney(r.ad_revenue_28d), mk('ad_revenue_28d'));
+    if (r.apple_ads_cpi !== null) brkLine(ul, 'Apple Ads per install', fmtMoney(r.apple_ads_cpi), mk('apple_ads_cpi'), null, r.apple_ads_cpi <= 3 ? 'good' : 'bad');
+    t.append(h, pills, lab, big, note, ul);
+    box.appendChild(t);
+  }
+});
+
+dash.draw('funnel-table', (tb) => {
+  const d = dash.data('ios_funnel');
+  tb.replaceChildren();
+  if (d.status !== 'ok' || !Array.isArray(d.data)) return;
+  const pct = d3.format('.1%');
+  for (const r of d.data) {
+    const tr = document.createElement('tr');
+    tr.dataset.key = encodeURIComponent(r.app);
+    cell(tr, r.app);
+    cell(tr, fmtInt(r.impressions), 'r'); cell(tr, fmtInt(r.page_views), 'r');
+    cell(tr, r.view_rate === null ? '' : pct(r.view_rate), 'r');
+    cell(tr, fmtInt(r.downloads), 'r');
+    const c = cell(tr, r.conversion === null ? '' : pct(r.conversion), 'r');
+    if (r.conversion !== null && r.page_views >= 50) c.classList.add(r.conversion >= 0.2 ? 'good' : r.conversion < 0.1 ? 'bad' : 'warn');
     tb.appendChild(tr);
   }
 });
