@@ -1,10 +1,10 @@
 app,store,status,installs_28d,installs_change_pct,monthly_active,monthly_active_change_pct,installs_lifetime,store_revenue_usd_28d
-"Benny's Farm",Google Play,Live,13200,-12,7970,-10,,0
-"Kingdom Rise",Google Play,Live,14000,30,8950,18,,0
+"Benny's Farm",Google Play,Live,12600,-15,7970,-9,,0
+"Kingdom Rise",Google Play,Live,13500,27,8950,19,,0
 "Captain Whiskers",Google Play,Closed test,20,,,,,0
 "Mud Engineer Pro",Google Play,Closed test,19,,1,,,0
-"MyMindCoach",Google Play,Live,45,-13,253,-16,,0
-"Ostazzi",Google Play,Live,11,-27,12,33,,0
+"MyMindCoach",Google Play,Live,45,0,253,-13,,0
+"Ostazzi",Google Play,Live,10,-38,12,9,,0
 "Benny's Farm",App Store,Live,76,,,,76,2
 "Kingdom Rise",App Store,Live,46,,,,99,0
 "Captain Whiskers",App Store,Live,5,,,,5,0
