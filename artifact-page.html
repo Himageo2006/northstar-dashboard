@@ -58,8 +58,8 @@
 .nd .sc .pills { display: flex; flex-wrap: wrap; gap: 6px; }
 .nd .sc .big { font-family: var(--font-anthropic-serif); font-size: 1.6rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .nd .sc .brk { margin-top: var(--cds-gap-xs); }
-.nd .tile .note.good, .nd .brk .d.good { color: var(--color-ok); }
-.nd .tile .note.bad, .nd .brk .d.bad { color: var(--color-bad); }
+.nd .tile .note.good, .nd .brk .d.good, .nd .store.good { color: var(--color-ok); }
+.nd .tile .note.bad, .nd .brk .d.bad, .nd .store.bad { color: var(--color-bad); }
 [data-dash-source-state=refreshing] { opacity: .5; }
 </style>
 
@@ -99,9 +99,9 @@
       </div>
       <div class="card">
         <h2>Latest day by app</h2>
-        <p class="sub">Each app's most recent full day of data compared with the day before.</p>
+        <p class="sub">Each app's most recent full day of data compared with the day before. Apps marked "testers only" are in Google Play closed testing: their Android installs are your invited testers, not the public.</p>
         <div class="tw">
-          <table data-source="last_day" data-row-key="app">
+          <table data-source="last_day apps" data-row-key="app">
             <thead><tr><th data-field="app">App</th><th class="r" data-field="android">Android</th><th class="r" data-field="ios">iPhone</th><th class="r" data-field="ad_revenue">Ad revenue</th></tr></thead>
             <tbody data-draw="last-day-table"></tbody>
           </table>
@@ -806,6 +806,8 @@ dash.draw('last-day-table', (tb) => {
   const d = dash.data('last_day');
   tb.replaceChildren();
   if (d.status !== 'ok' || !Array.isArray(d.data)) return;
+  const ad = dash.data('apps');
+  const apps = ad.status === 'ok' ? ad.data : [];
   const vs = (td, cur, prev, fmt) => {
     if (cur === null) return;
     td.textContent = fmt(cur);
@@ -820,7 +822,13 @@ dash.draw('last-day-table', (tb) => {
     if (!r.android && !r.android_prev && !r.ios && !r.ios_prev && !r.ad_revenue && !r.ad_revenue_prev) continue;
     const tr = document.createElement('tr');
     tr.dataset.key = encodeURIComponent(r.app);
-    cell(tr, r.app);
+    const nameTd = cell(tr, r.app);
+    const play = apps.find((a) => a.app === r.app && a.store === 'Google Play');
+    if (play && play.status !== 'Live') {
+      const p = document.createElement('span'); p.className = 'pill test'; p.style.marginLeft = '8px';
+      p.textContent = play.status === 'Closed test' ? 'Android: testers only' : 'Android: ' + play.status.toLowerCase();
+      nameTd.appendChild(p);
+    }
     vs(cell(tr, '', 'r'), r.android, r.android_prev, fmtInt);
     vs(cell(tr, '', 'r'), r.ios, r.ios_prev, fmtInt);
     vs(cell(tr, '', 'r'), r.ad_revenue, r.ad_revenue_prev, d3.format('$.2f'));
