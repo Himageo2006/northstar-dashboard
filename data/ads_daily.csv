@@ -1,7 +1,4 @@
 date,app,platform,ad_revenue_usd,ad_users,ad_impressions
-2026-09-12,"Kingdom Rise",iOS,0,1,0
-2026-09-12,"Kingdom Rise",Android,0.04,171,14
-2026-09-12,"Benny's Farm",Android,0.07,343,96
 2026-09-13,"Kingdom Rise",Android,0,167,15
 2026-09-13,"Benny's Farm",Android,0.08,368,114
 2026-09-14,"Kingdom Rise",iOS,0,2,0
@@ -190,3 +187,7 @@ date,app,platform,ad_revenue_usd,ad_users,ad_impressions
 2026-11-10,"Kingdom Rise",Android,0,110,17
 2026-11-10,"Benny's Farm",iOS,0,11,0
 2026-11-10,"Benny's Farm",Android,0.01,136,28
+2026-11-11,"Kingdom Rise",iOS,0,2,0
+2026-11-11,"Kingdom Rise",Android,0.03,134,31
+2026-11-11,"Benny's Farm",iOS,0,5,0
+2026-11-11,"Benny's Farm",Android,0.19,160,100
