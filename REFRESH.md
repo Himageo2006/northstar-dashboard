@@ -1,7 +1,7 @@
 # Northstar Apps Dashboard — daily refresh
 
 Dashboard: https://claude.ai/artifact/GtFwrbQtJYDnQAcCyLD3r4 (claude.ai "Data" artifact type).
-Its data are 11 attached CSV files, one per dataset document `datasets/<id>` in the artifact store.
+Its data are 14 attached CSV files, one per dataset document `datasets/<id>` in the artifact store.
 Local copies of the current CSVs live in `data/` next to this file. The claude.ai page (`artifact-page.html`, stored in the artifact as files/index.html) and the public GitHub Pages page (`index.html`, built by `node tools/build-pages.js` from artifact-page.html) do NOT need to change on a refresh.
 
 Rules: only READ from the consoles. Never change campaigns, apps, settings or anything else. Never click accept/consent/submit. If a site asks for sign-in, skip that source and report it.
@@ -53,6 +53,7 @@ App names come back like "Bennys Farm Village Life (Android)" / "Kingdom Rise Em
 - `.../analytics/tab-overview/period-default` → Views, Watch time (hours), usual range text.
 - `.../analytics/tab-earn_revenue/period-default` → Estimated revenue (— means 0).
 - 12 months by month: open `.../analytics/tab-overview/period-year/explore?entity_type=CHANNEL&entity_id=UC3jMQFHmarlCW-hGsZSD06w&time_period=year&explore_type=TABLE_AND_CHART&metric=EXTERNAL_VIEWS&granularity=MONTH&t_metrics=EXTERNAL_VIEWS&t_metrics=EXTERNAL_WATCH_TIME&t_metrics=AVERAGE_WATCH_TIME&t_metrics=TOTAL_ESTIMATED_EARNINGS&dimension=MONTH&o_column=MONTH&o_direction=ANALYTICS_ORDER_DIRECTION_DESC`, wait ~10 s, read `document.body.innerText` with javascript_tool (get_page_text shows only the header). The table gives a Total row (views, watch hours to one decimal, average view duration, revenue) and one row per month: views | % | watch hours | % | avg duration | revenue | %. "—" = 0.
+- Last 48 hours (realtime): on any `.../analytics/tab-overview/...` page, wait ~8 s, then javascript_tool `document.querySelector("yta-latest-activity-card").data.mainChart.data.map(p=>new Date(p.x).toISOString().slice(0,13)+"="+p.y).join(",")` → 48 hourly view counts (UTC hours). Do not print the whole data object (the tool blocks it). The same card's innerText gives the live subscriber count, "Views · Last 48 hours" and its Top content (title, views).
 - 12-month change and top videos: `.../analytics/tab-overview/period-year` page text → Watch time "…% less/more than previous 365 days", Subscribers "+80.2K" with the same kind of %, and the Top content list (title + views).
 - `.../videos/upload` → rows `ytcp-video-row`: `#video-title`, `.tablecell-visibility`, `.tablecell-date`, `.tablecell-views`. Keep videos published in the last 14 days (plus scheduled ones), max 10.
 
@@ -67,6 +68,9 @@ App names come back like "Bennys Farm Village Life (Android)" / "Kingdom Rise Em
 - youtube_year.csv: metric,value,change_pct,note with metrics Views, Watch time (hours) (exact Total from advanced mode), Subscribers gained (e.g. 80200 for "+80.2K"), Estimated revenue (USD), Average view duration (sec). change_pct is negative for "less than previous 365 days"; leave empty if Studio shows none.
 - youtube_monthly.csv: month(YYYY-MM),views,watch_hours,avg_view_duration_sec,revenue_usd,note — oldest month first; note "from <D Mon>" on the first (partial) month and "to <D Mon>" on the current (ongoing) month, empty otherwise.
 - youtube_top.csv: rank,title,views — the 10 top content rows for 365 days, titles shortened like youtube_videos.
+- youtube_hourly.csv: hour_utc,views — 48 rows like `2026-11-12T03:00Z,1`, oldest first.
+- youtube_realtime.csv: kind,label,value,captured_utc — rows `metric,Subscribers,<live count>`, `metric,Views last 48 hours,<n>`, then up to 3 `top_video,<short title>,<views>`; captured_utc like 2026-11-12T04:20Z.
+- snapshots.csv: date,metric,value — APPEND (never rewrite old rows) today's rows for metrics youtube_subscribers (live count), installs_28d (sum of apps.csv installs_28d), android_mau (sum of Google Play monthly_active), ad_revenue_28d (LevelPlay last 28 days, 2 decimals), youtube_views_28d. If rows for today already exist, replace only today's rows. The "since yesterday" tile compares the two latest dates.
 - youtube_videos.csv: title,published(YYYY-MM-DD),status(Public/Scheduled/…),views — shorten titles (drop emoji and "| Happy Kids TV").
 Quote any field containing a comma. Write to data/ (overwrite). Also write data/meta.json as {"updated": "<D Mon YYYY>"} (e.g. "12 Nov 2026") — the public page shows it.
 
@@ -79,7 +83,7 @@ For each changed CSV:
 3. `ArtifactData update` with if_version: `{source: {url: <new blob url>}, updated: {at: <now ISO>, by: "Claude (daily refresh)"}, edit: {via: "claude", at: <now ISO>}}`.
 4. Delete the OLD asset (`Artifact` action delete, url = dashboard, path = old 32-char id) only after the update succeeded.
 Also update the asof line? No — the page text says "Snapshot collected 11 Nov"; replace that date: `ArtifactData update` files/index.html `edit` first, then `str_replace` field `text` old "Snapshot collected <old date>" → new date (read the doc first to find the current date and version).
-Dataset ids: apps, android_daily, ratings, ios_daily, ads_daily, paid_ads, youtube, youtube_videos, youtube_year, youtube_monthly, youtube_top.
+Dataset ids: apps, android_daily, ratings, ios_daily, ads_daily, paid_ads, youtube, youtube_videos, youtube_year, youtube_monthly, youtube_top, youtube_hourly, youtube_realtime, snapshots.
 
 ## 4. Save to GitHub
 In `D:\Claude ai\northstar-dashboard` (repo github.com/Himageo2006/northstar-dashboard, branch main): `git add data && git commit -m "Daily data refresh <YYYY-MM-DD>"` then `git push`. Skip if nothing changed. Push only this repo. The repo is PUBLIC and serves the dashboard at https://himageo2006.github.io/northstar-dashboard/ — never commit tokens, keys or anything besides the data files.
